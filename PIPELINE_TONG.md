@@ -315,7 +315,7 @@ Cộng thêm dữ liệu lớn ngay trong project:
 | ~~1~~ | ~~Tách validation~~ | TV2 | ✅ **xong** — 15% mỗi user, chỉ từ `train.csv` |
 | ~~2~~ | ~~Popularity + ALS trên dữ liệu thật~~ | TV2 | ✅ **xong 22/11** |
 | ~~3~~ | ~~ALS + mood~~ | TV3 | ✅ **xong 22/11** — G1 đủ 3 dòng |
-| **1** | **Chạy lại A2 bằng cấu hình gu chính thức** (`binary`, 8 vòng) | TV3 | A2 và G1 đang dùng **hai mô hình gu khác nhau** |
+| ~~1~~ | ~~Chạy lại A2 bằng cấu hình gu chính thức~~ | TV3 | ✅ **xong 22/11 — kết luận không đổi**, +24,0% → **+24,3%** |
 | ~~2~~ | ~~TV2 push `data.py` + `evaluate.py`; merge `han/taste-als-report`~~ | TV2 | ✅ **xong 22/11** — xem G5; TV3 cần `git pull` |
 | 3 | Chốt **một bộ số duy nhất** cho báo cáo (xem mục 5) | cả nhóm | tránh mâu thuẫn giữa 4 tài liệu |
 | 4 | **Demo tối thiểu**: thanh kéo valence–energy + α + nút "hành trình cảm xúc" | TV3 | 1 file Streamlit, không cần đẹp |
@@ -353,8 +353,8 @@ cuối ghi chỗ **còn lại** cần rà.
 | Phép đo | Số cũ (Phần II) | **Số chuẩn (chính thức)** | Còn phải rà ở |
 |---|---|---|---|
 | T6 `personal` vs tọa độ tay | +12,6% | **+2,7%** | slide cũ |
-| A2 set1 ghép 0,5 (N=3) | 0,6146 / +23,9% (N=5) | **0,6106 / +24,0%** | — |
-| A2 phân biệt tâm trạng | +0,027 → +0,376 | **+0,0217 → +0,3594** | — |
+| A2 set1 ghép 0,5 (N=3) | 0,6146 / +23,9% (N=5) · 0,6106 / +24,0% (`log`/15) | **0,6120 / +24,3%** (`binary`/8, chính thức) | `TASKS.md` Phần II–III nói +24,0% |
+| A2 phân biệt tâm trạng | +0,027 → +0,376 | **+0,0208 → +0,3605** | — |
 | A1 bảng tay khớp âm thanh | 83,0% | **84,9%** | — |
 | A1 bảng tay macro-F1 | 0,5711 | **0,5656** | — |
 | A3 `seed3` | +0,1% (ngang) | **−9,0% (loại hẳn)** | — |

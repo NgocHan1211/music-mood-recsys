@@ -1382,3 +1382,82 @@ python -m src.mood.evaluate_catalogue \
    Đây là cách duy nhất làm được khi dữ liệu không có yêu cầu tâm trạng theo lượt nghe.
 5. **A2 và G1 dùng hai cấu hình ALS khác nhau** cho tới khi A2 được chạy lại bằng `binary`/8 vòng
    (xem `docs/decisions.md` 2026-11-22). Đây là việc P0 còn lại của Phần IV.
+
+---
+
+## 27. A2 chạy lại bằng cấu hình gu chính thức — kết luận **không đổi**
+
+### 27.1 Vì sao phải chạy lại
+
+A2 ở Phần II/III dùng ALS `weighting="log"` (tức `log1p(playcount)`) với **15 vòng** — cấu hình
+mặc định, `docs/decisions.md` 2026-10-30 ghi rõ *"không grid-search, cần TV2 xác nhận"*. Ngày
+22/11 TV2 chọn cấu hình bằng validation NDCG@10: **`binary`, 8 vòng**. Nếu để nguyên thì G1 và A2
+dùng **hai mô hình gu khác nhau** trong cùng báo cáo.
+
+Lưu ý thuật ngữ: `--weight playcount` nói **cột nào** nuôi confidence (`playcount` hay
+`engagement_score`); `weighting` mới là **hàm tin cậy** (`log` / `binary` / `engagement`). Hai
+thứ khác nhau, trước đây dễ bị gọi lẫn.
+
+### 27.2 Kết quả — NDCG@3, set1 (đúng gu **và** đúng tâm trạng)
+
+| Cấu hình ALS | cohort | n_cases | chỉ gu | ghép 0,5 | mức tăng | phân biệt tâm trạng (ghép 0,5) |
+|---|---|---|---|---|---|---|
+| `log` / 15 vòng *(đã công bố)* | 289.572 user · 22.557 bài | 18.001 | 0,4923 | 0,6106 | **+24,0%** | +0,3594 |
+| **`binary` / 8 vòng** *(chính thức)* | 289.572 user · 22.557 bài | 18.001 | 0,4922 | **0,6120** | **+24,3%** | +0,3605 |
+| **`binary` / 8 vòng** | **10.000 user · 17.691 bài** (cohort của G1) | 2.872 | 0,4796 | 0,6003 | **+25,2%** | +0,3604 |
+
+Thứ hạng trọng số ghép **không đổi** ở cả ba: 0,5 luôn tốt hơn 0,3 và 0,7.
+
+| | ghép 0,3 | **ghép 0,5** | ghép 0,7 |
+|---|---|---|---|
+| `log`/15, đầy đủ | 0,5527 | **0,6106** | 0,5669 |
+| `binary`/8, đầy đủ | 0,5542 | **0,6120** | 0,5674 |
+| `binary`/8, 10k | 0,5439 | **0,6003** | 0,5583 |
+
+### 27.3 Đọc ra
+
+**1. Kết luận A2 bền với cấu hình gu.** Đổi hàm tin cậy và số vòng chỉ làm mức tăng nhúc nhích
++24,0% → +24,3%. Mức phân biệt tâm trạng gần như không đổi (+0,3594 → +0,3605). Nghĩa là
+"tâm trạng bổ sung thật cho gu" **không phải hệ quả của một cấu hình ALS may mắn**.
+
+**2. Thu nhỏ cohort cũng không đổi kết luận** (+25,2% trên 10.000 user). Nhưng cỡ mẫu nhỏ hơn
+6,3 lần (2.872 so với 18.001 cặp) và có **830 bài bị che bị loại vì ngoài catalogue** (cohort đầy
+đủ: 0), nên con số này nhiễu hơn — dùng để đối chứng, không dùng làm số chính.
+
+**3. Mô hình gu càng mù tâm trạng hơn ở cohort nhỏ**: mức phân biệt của `taste` giảm từ +0,0208
+xuống **+0,0100**. Củng cố luận điểm gốc của A2.
+
+### 27.4 Số nào dùng cho báo cáo
+
+**Dùng `binary`/8 trên cohort đầy đủ: ghép 0,5 đạt 0,6120 ở set1, hơn chỉ-gu +24,3%.** Lý do: đó
+là mô hình gu chính thức của nhóm, cùng cấu hình với bảng G1, nên cả hai bảng nói về **một hệ
+thống**. Giữ dòng `log`/15 (+24,0%) trong báo cáo như **phép kiểm tra độ bền**, không phải số chính.
+
+Kết luận thiết kế của A2 (`taste_weight = 0,5`) **không thay đổi**.
+
+### 27.5 File
+
+| File | Nội dung |
+|---|---|
+| `data/processed/taste_als_official_binary8.npz` | ALS chính thức, cohort đầy đủ (rò rỉ 0) |
+| `data/processed/taste_als_official_binary8_g1_10k.npz` | ALS chính thức, cohort 10k của G1 (rò rỉ 0) |
+| `data/processed/cohort_g1_10k.csv` | đúng 10.000 user của G1 (kiểm: 2.000/2.000 user G1 nằm trong) |
+| `data/processed/four_sets_summary_n3_official_binary8*.csv` | bảng bốn tập |
+| `reports/figures/four_sets_n3_official_binary8*.png` | hình |
+
+```bash
+# ALS chinh thuc, cohort day du
+python -m src.mood.taste --split official --als-weighting binary --als-iterations 8
+python -m src.mood.evaluate_four_sets --split official --n-per-set 3 --n-users 60000 \
+    --als-weighting binary --als-iterations 8
+
+# ALS chinh thuc, cohort 10k cua G1
+python -m src.mood.taste --split official --als-weighting binary --als-iterations 8 \
+    --users-file data/processed/cohort_g1_10k.csv --cohort-tag g1_10k
+python -m src.mood.evaluate_four_sets --split official --n-per-set 3 --n-users 60000 \
+    --als-weighting binary --als-iterations 8 \
+    --cohort-tag g1_10k --users-file data/processed/cohort_g1_10k.csv
+```
+
+Mặc định của `taste.py` và `evaluate_four_sets.py` **không đổi** (`log`/15 vòng, hậu tố rỗng), nên
+mọi số Phần I–III vẫn tái lập đúng và không file nào bị ghi đè.

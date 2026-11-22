@@ -38,19 +38,44 @@ ALS_NPZ = PROCESSED_DIR / "taste_als.npz"
 COHORT_CSV = PROCESSED_DIR / "taste_cohort.csv"
 
 
-def artifact_paths(split: str = "official", weight: str = "playcount"):
+# Cấu hình ALS mặc định: bản dùng cho Phần I–III, TV2 chưa grid-search lúc đó.
+# Giữ nguyên để mọi số đã công bố tái lập đúng.
+ALS_CONFIG = dict(factors=32, regularization=0.1, als_alpha=10.0, iterations=15,
+                  seed=SEED, weighting="log", backend="implicit")
+
+# Cấu hình TV2 đã chọn bằng validation NDCG@10 ngày 22/11/2026 (xem docs/decisions.md).
+# Đây là cấu hình gu chính thức của nhóm từ Phần IV trở đi.
+ALS_CONFIG_OFFICIAL = dict(ALS_CONFIG, weighting="binary", iterations=8)
+
+
+def variant_tag(als_weighting: str = "log", iterations: int = 15,
+                cohort: str = "") -> str:
+    """Hậu tố phân biệt các cấu hình ALS, để không ghi đè artifact đã công bố.
+
+    Cấu hình cũ (log/15 vòng, cohort đầy đủ) cho hậu tố rỗng nên đường dẫn không đổi.
+    """
+    parts = []
+    if (als_weighting, int(iterations)) != (ALS_CONFIG["weighting"],
+                                            ALS_CONFIG["iterations"]):
+        parts.append(f"{als_weighting}{int(iterations)}")
+    if cohort:
+        parts.append(cohort)
+    return ("_" + "_".join(parts)) if parts else ""
+
+
+def artifact_paths(split: str = "official", weight: str = "playcount",
+                   variant: str = ""):
     """Đường dẫn mô hình gu + cohort cho từng cấu hình (để các bản không ghi đè nhau)."""
     if split == "local":
+        if variant:
+            return (ALS_NPZ.with_name(f"taste_als{variant}.npz"),
+                    COHORT_CSV.with_name(f"taste_cohort{variant}.csv"))
         return ALS_NPZ, COHORT_CSV
     if split != "official":
         raise ValueError(f"split phải là 'official' hoặc 'local', không phải {split!r}")
     tag = "" if weight == "playcount" else "_engage"
-    return (PROCESSED_DIR / f"taste_als_official{tag}.npz",
-            PROCESSED_DIR / f"taste_cohort_official{tag}.csv")
-
-# Cấu hình ALS: giữ đúng mặc định của TV2 (chưa grid-search — việc đó thuộc TV2)
-ALS_CONFIG = dict(factors=32, regularization=0.1, als_alpha=10.0, iterations=15,
-                  seed=SEED, weighting="log", backend="implicit")
+    return (PROCESSED_DIR / f"taste_als_official{tag}{variant}.npz",
+            PROCESSED_DIR / f"taste_cohort_official{tag}{variant}.csv")
 
 
 def _load_taste_package() -> types.ModuleType:
@@ -109,13 +134,15 @@ def fit_als(train: pd.DataFrame, config: dict | None = None):
     return model
 
 
-def load_als(split: str = "official", weight: str = "playcount"):
-    """Nạp mô hình gu đã lưu cho cấu hình (split, weight) tương ứng."""
-    path, _ = artifact_paths(split, weight)
+def load_als(split: str = "official", weight: str = "playcount",
+             variant: str = ""):
+    """Nạp mô hình gu đã lưu cho cấu hình (split, weight, variant) tương ứng."""
+    path, _ = artifact_paths(split, weight, variant)
     if not path.exists():
         raise FileNotFoundError(
             f"Chưa có {path}. Chạy: python -m src.mood.taste "
-            f"--split {split} --weight {weight}")
+            f"--split {split} --weight {weight}"
+            + (f" (kèm tham số tạo ra hậu tố {variant!r})" if variant else ""))
     return taste_models().ALS.load(path)
 
 
@@ -155,16 +182,41 @@ def main() -> None:
                         help="split local: số user test")
     parser.add_argument("--n-extra-users", type=int, default=30000,
                         help="split local: số user thêm vào cohort")
+    parser.add_argument("--als-weighting", choices=["log", "binary"],
+                        default=ALS_CONFIG["weighting"],
+                        help="hàm tin cậy của ALS; 'binary' là cấu hình TV2 đã chọn 22/11")
+    parser.add_argument("--als-iterations", type=int, default=ALS_CONFIG["iterations"],
+                        help="số vòng ALS; TV2 chọn 8")
+    parser.add_argument("--users-file", type=Path, default=None,
+                        help="CSV có cột user_id: chỉ huấn luyện trên đúng các user này "
+                             "(dùng để trùng cohort với bảng G1)")
+    parser.add_argument("--cohort-tag", default="",
+                        help="nhãn thêm vào tên file, ví dụ g1_10k")
     args = parser.parse_args()
 
     cfg = load_config()
     ev = cfg["evaluation"]
     profiles = api.load_mood_profiles()
-    als_npz, cohort_csv = artifact_paths(args.split, args.weight)
+    variant = variant_tag(args.als_weighting, args.als_iterations, args.cohort_tag)
+    als_config = dict(ALS_CONFIG, weighting=args.als_weighting,
+                      iterations=args.als_iterations)
+    als_npz, cohort_csv = artifact_paths(args.split, args.weight, variant)
+    print(f"Cấu hình ALS: weighting={als_config['weighting']} "
+          f"iterations={als_config['iterations']} factors={als_config['factors']}"
+          + (f" | hậu tố artifact: {variant}" if variant else " | artifact mặc định"))
 
     if args.split == "official":
         train, test = official_split(set(profiles.index))
         users = np.sort(train["user_id"].unique())
+        if args.users_file is not None:
+            wanted = set(pd.read_csv(args.users_file, dtype={"user_id": str})
+                         .user_id.astype(str).str.strip())
+            users = np.sort(np.array([u for u in users if u in wanted]))
+            if not len(users):
+                raise ValueError(f"{args.users_file} không khớp user nào trong train")
+            train = train[train["user_id"].isin(set(users))]
+            test = test[test["user_id"].isin(set(users))]
+            print(f"Giới hạn cohort theo {args.users_file.name}: {len(users):,} user")
         n_cap = 3000 if args.sample else args.n_users
         if n_cap and n_cap < len(users):
             users = np.sort(np.random.default_rng(SEED).choice(users, size=n_cap,
@@ -215,7 +267,7 @@ def main() -> None:
     assert leaked == 0, "phần bị che đã lọt vào dữ liệu huấn luyện ALS"
 
     print("Đang huấn luyện ALS...", flush=True)
-    model = fit_als(frame)
+    model = fit_als(frame, als_config)
     model.save(als_npz)
     print(f"ALS: {len(model.users):,} user x {len(model.items):,} bài, "
           f"{model.config['factors']} factor -> {als_npz}")
