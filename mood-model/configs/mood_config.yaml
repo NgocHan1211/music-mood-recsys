@@ -1,0 +1,179 @@
+# Cấu hình module tâm trạng.
+# candidate_tags chỉ là GỢI Ý để đối chiếu; chỉ dùng tag thật sự có trong dữ liệu (task T1).
+
+seed: 42
+sample_size: 5000
+
+groups: [vui, buon, thu_gian, nang_dong, cang_thang]
+
+# Tọa độ tự đặt cũ (baseline_ve), dùng để so sánh
+manual_centroids:
+  vui:        [0.80, 0.75]
+  buon:       [0.20, 0.30]
+  thu_gian:   [0.60, 0.30]
+  nang_dong:  [0.60, 0.90]
+  cang_thang: [0.25, 0.85]
+
+# Tag ứng viên -> trọng số cho từng nhóm. Xác nhận lại với người dùng sau T1.
+candidate_tags:
+  happy:        {vui: 1.0}
+  cheerful:     {vui: 1.0}
+  upbeat:       {vui: 0.7, nang_dong: 0.3}
+  "feel good":  {vui: 1.0}
+  fun:          {vui: 0.7, nang_dong: 0.3}
+  sad:          {buon: 1.0}
+  melancholy:   {buon: 1.0}
+  melancholic:  {buon: 1.0}
+  depressing:   {buon: 1.0}
+  heartbreak:   {buon: 1.0}
+  chill:        {thu_gian: 1.0}
+  chillout:     {thu_gian: 1.0}
+  relaxing:     {thu_gian: 1.0}
+  mellow:       {thu_gian: 0.8, buon: 0.2}
+  calm:         {thu_gian: 1.0}
+  ambient:      {thu_gian: 0.8}
+  acoustic:     {thu_gian: 0.5}
+  energetic:    {nang_dong: 1.0}
+  party:        {nang_dong: 0.8, vui: 0.2}
+  dance:        {nang_dong: 0.8, vui: 0.2}
+  workout:      {nang_dong: 1.0}
+  aggressive:   {cang_thang: 1.0}
+  angry:        {cang_thang: 1.0}
+  dark:         {cang_thang: 0.6, buon: 0.4}
+  intense:      {cang_thang: 0.7, nang_dong: 0.3}
+  heavy:        {cang_thang: 0.6, nang_dong: 0.4}
+
+# Tag mơ hồ: phải hỏi người dùng trước khi dùng
+ambiguous: [love, beautiful, romantic, sexy, epic, emotional, atmospheric, psychedelic]
+
+# Tag dùng để phân loại category trong T1 (bổ sung nếu thiếu).
+# Các danh sách genre/descriptor được bổ sung ở T1 từ 100 tag THẬT trong dữ liệu.
+# Thứ tự ưu tiên khi gán category: decade -> country -> genre -> descriptor -> emotion -> other.
+non_emotion_hints:
+  decade: ["50s", "60s", "70s", "80s", "90s", "00s", oldies]
+  country: [british, american, french, german, swedish, canadian, japanese, polish, russian]
+  genre: [rock, indie, electronic, alternative, pop, alternative_rock, indie_rock, metal,
+          classic_rock, singer_songwriter, experimental, ambient, folk, punk, hard_rock,
+          dance, hip_hop, death_metal, jazz, soul, punk_rock, heavy_metal, indie_pop,
+          hardcore, metalcore, downtempo, trip_hop, progressive_rock, psychedelic, emo,
+          blues, electro, post_punk, industrial, new_wave, britpop, progressive_metal,
+          funk, post_hardcore, soundtrack, country, melodic_death_metal, grunge, blues_rock,
+          lounge, rap, rnb, synthpop, thrash_metal, reggae, pop_rock, post_rock, black_metal,
+          techno, gothic, idm, screamo, psychedelic_rock, doom_metal, ska, gothic_metal,
+          grindcore, nu_metal, power_metal, house, new_age, trance, noise, avant_garde,
+          symphonic_metal, classical, drum_and_bass, dark_ambient, j_pop]
+  # tag mô tả giọng hát / nhạc cụ / phiên bản -> category "other"
+  descriptor: [female_vocalists, male_vocalists, instrumental, acoustic, piano, guitar, cover]
+
+# Luật rà bài nghi ghép nhầm phiên bản (T1)
+suspect_rules:
+  version_name_pattern: '(?:\blive\b|remix|\bcover\b|\bversion\b|remaster|karaoke|tribute)'
+  era_gap_years: 20     # tag thập niên cách năm phát hành > 20 năm -> tín hiệu yếu
+  strong_reasons: [cover_tag, name_version, spotify_id_dup, duration_outlier]
+
+# ---------------------------------------------------------------------------
+# Trọng số tag -> nhóm dùng để sinh nhãn yếu (T2).
+# Chốt ở T1 (người dùng duyệt 2026-10-21): chỉ 5/100 tag là tag cảm xúc và cả 5 cùng
+# một vùng valence-energy, nên bổ sung tag THỂ LOẠI mang cảm xúc rõ làm bằng chứng phụ
+# với trọng số thấp hơn (support_weight). Mọi tag dưới đây đều CÓ THẬT trong dữ liệu;
+# nhóm gợi ý dựa trên hồ sơ valence/energy/acousticness của từng tag (reports/RESULTS.md 1.3).
+# `love` và `psychedelic` bị loại theo quyết định T1.
+labeling_tags:
+  support_weight: 0.5
+
+  # Tag cảm xúc trực tiếp của người nghe (trọng số 1.0)
+  direct:
+    chill:      {thu_gian: 1.0}                 # val 0.42 / ene 0.53
+    chillout:   {thu_gian: 1.0}                 # val 0.38 / ene 0.52
+    mellow:     {thu_gian: 0.7, buon: 0.3}      # val 0.36 / ene 0.44
+    beautiful:  {buon: 0.7, thu_gian: 0.3}      # val 0.29 / ene 0.46 - valence thấp nhất trong 5 tag cảm xúc
+
+  # Tag thể loại mang cảm xúc rõ (trọng số nhân với support_weight)
+  support:
+    # -- Vui: valence cao --
+    reggae:              {vui: 1.0}                      # 0.72 / 0.64
+    ska:                 {vui: 0.6, nang_dong: 0.4}      # 0.71 / 0.79
+    funk:                {vui: 0.8, nang_dong: 0.2}      # 0.66 / 0.68
+    new_wave:            {vui: 0.6, nang_dong: 0.4}      # 0.60 / 0.72
+    hip_hop:             {vui: 0.5, nang_dong: 0.5}      # 0.59 / 0.70
+    rap:                 {vui: 0.5, nang_dong: 0.5}      # 0.59 / 0.70
+    soul:                {vui: 0.7, thu_gian: 0.3}       # 0.57 / 0.57
+    # -- Năng động: energy và danceability cao --
+    dance:               {nang_dong: 0.8, vui: 0.2}      # 0.60 / 0.78
+    house:               {nang_dong: 1.0}                # 0.51 / 0.73
+    electro:             {nang_dong: 1.0}                # 0.51 / 0.72
+    techno:              {nang_dong: 1.0}                # 0.43 / 0.74
+    trance:              {nang_dong: 1.0}                # 0.39 / 0.78
+    drum_and_bass:       {nang_dong: 0.7, cang_thang: 0.3}  # 0.40 / 0.81
+    punk:                {nang_dong: 0.6, cang_thang: 0.4}  # 0.52 / 0.86
+    punk_rock:           {nang_dong: 0.6, cang_thang: 0.4}  # 0.52 / 0.87
+    # -- Căng thẳng: valence thấp, energy rất cao --
+    metalcore:           {cang_thang: 1.0}               # 0.27 / 0.92
+    thrash_metal:        {cang_thang: 1.0}               # 0.30 / 0.92
+    death_metal:         {cang_thang: 1.0}               # 0.23 / 0.91
+    grindcore:           {cang_thang: 1.0}               # 0.21 / 0.90
+    melodic_death_metal: {cang_thang: 1.0}               # 0.27 / 0.90
+    black_metal:         {cang_thang: 1.0}               # 0.20 / 0.83
+    hardcore:            {cang_thang: 0.8, nang_dong: 0.2}  # 0.33 / 0.91
+    post_hardcore:       {cang_thang: 0.8, nang_dong: 0.2}  # 0.32 / 0.87
+    screamo:             {cang_thang: 0.8, buon: 0.2}       # 0.32 / 0.88
+    noise:               {cang_thang: 0.8, buon: 0.2}       # 0.29 / 0.72
+    nu_metal:            {cang_thang: 0.7, nang_dong: 0.3}  # 0.39 / 0.87
+    heavy_metal:         {cang_thang: 0.7, nang_dong: 0.3}  # 0.37 / 0.85
+    metal:               {cang_thang: 0.7, nang_dong: 0.3}  # 0.34 / 0.86
+    industrial:          {cang_thang: 0.7, nang_dong: 0.3}  # 0.38 / 0.81
+    progressive_metal:   {cang_thang: 0.7, buon: 0.3}       # 0.26 / 0.78
+    power_metal:         {cang_thang: 0.6, nang_dong: 0.4}  # 0.32 / 0.84
+    gothic_metal:        {cang_thang: 0.5, buon: 0.5}       # 0.28 / 0.76
+    symphonic_metal:     {cang_thang: 0.5, buon: 0.5}       # 0.28 / 0.75
+    # -- Buồn: valence thấp, energy thấp đến trung bình --
+    dark_ambient:        {buon: 0.7, cang_thang: 0.3}    # 0.16 / 0.44 - valence thấp nhất toàn bộ, energy thấp
+    doom_metal:          {buon: 0.6, cang_thang: 0.4}    # 0.26 / 0.73
+    gothic:              {buon: 0.6, cang_thang: 0.4}    # 0.34 / 0.70
+    emo:                 {buon: 0.7, cang_thang: 0.3}    # 0.41 / 0.79 - nghĩa đen là emotional
+    post_rock:           {buon: 0.8, thu_gian: 0.2}      # 0.23 / 0.56
+    classical:           {buon: 0.5, thu_gian: 0.5}      # 0.20 / 0.28
+    piano:               {buon: 0.5, thu_gian: 0.5}      # 0.30 / 0.39
+    # -- Thư giãn: energy thấp, acousticness cao --
+    acoustic:            {thu_gian: 1.0}                 # 0.40 / 0.42
+    jazz:                {thu_gian: 1.0}                 # 0.47 / 0.43
+    downtempo:           {thu_gian: 1.0}                 # 0.38 / 0.55
+    new_age:             {thu_gian: 0.7, buon: 0.3}      # 0.27 / 0.40
+    folk:                {thu_gian: 0.8, buon: 0.2}      # 0.42 / 0.44
+    lounge:              {thu_gian: 0.8, vui: 0.2}       # 0.48 / 0.56
+    ambient:             {thu_gian: 0.7, buon: 0.3}      # 0.25 / 0.45
+    trip_hop:            {thu_gian: 0.7, buon: 0.3}      # 0.41 / 0.60
+    singer_songwriter:   {thu_gian: 0.6, buon: 0.4}      # 0.43 / 0.46
+
+labeling:
+  min_tracks_per_group: 300
+  min_label_confidence: 0.5
+  conflict_margin: 0.2
+
+classifier:
+  features: [valence, energy, danceability, acousticness, instrumentalness,
+             speechiness, liveness, loudness, tempo, mode, key]
+  n_splits: 5
+  # Chốt ở T3: cả isotonic và sigmoid đều làm nhóm buon gần như không bao giờ
+  # được dự đoán (F1 0.007 / 0.006) trong khi ECE gốc đã tốt (0.041) -> không hiệu chỉnh.
+  calibration: none
+  calibration_candidates: [none, isotonic, sigmoid]
+
+# Trộn nhãn tag và dự đoán mô hình cho bài có nhãn tag (T4)
+predict:
+  tag_weight: 0.7   # trọng số của nhãn người nghe; 1 - giá trị này cho mô hình
+
+scoring:
+  lam: 0.6        # trọng số xác suất nhóm vs độ gần trên thanh kéo
+  sigma: 0.15     # độ rộng Gaussian cho prox
+
+personalization:
+  shrinkage_k: 10
+  min_prob: 0.5   # bài coi là thuộc nhóm m của user nếu P(m|s) >= min_prob
+
+evaluation:
+  test_user_ratio: 0.2
+  min_user_tracks: 10
+  hidden_ratio: 0.3
+  k: [10, 20]
+  min_hidden_per_mood: 3

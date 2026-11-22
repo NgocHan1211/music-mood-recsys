@@ -1,0 +1,22 @@
+{
+  "alpha": 0.9,
+  "rule": "max NDCG@10 trên validation",
+  "alphas_considered": [
+    0.0,
+    0.25,
+    0.4,
+    0.5,
+    0.6,
+    0.75,
+    0.9,
+    1.0
+  ],
+  "taste_config": {
+    "factors": 32,
+    "regularization": 0.1,
+    "als_alpha": 10.0,
+    "weighting": "binary",
+    "iterations": 8,
+    "seed": 42
+  }
+}

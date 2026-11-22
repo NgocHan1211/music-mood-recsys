@@ -1,0 +1,47 @@
+{
+  "train_source": "/Users/nhule/Desktop/UIT-DS-SJ/DS300/project/data/train.csv",
+  "test_source": "/Users/nhule/Desktop/UIT-DS-SJ/DS300/project/data/test.csv",
+  "train_sha256": "29cda701858ec06f5b6a1ecb65b5ca86d1dc677e56c7d053cebef09db92afb47",
+  "test_sha256": "ea43ad3602c7035732a4a77e617b49eb15d0bbe6942e64aabd4835a01dcf73c1",
+  "seed": 42,
+  "backend": "implicit",
+  "taste_config": {
+    "factors": 32,
+    "regularization": 0.1,
+    "als_alpha": 10.0,
+    "weighting": "binary",
+    "iterations": 8,
+    "seed": 42
+  },
+  "selected_alpha": 0.9,
+  "alphas_considered": [
+    0.0,
+    0.25,
+    0.4,
+    0.5,
+    0.6,
+    0.75,
+    0.9,
+    1.0
+  ],
+  "report_only_alphas": [
+    0.5
+  ],
+  "max_train_users": 10000,
+  "max_eval_users": 2000,
+  "official_test_used_for_selection": false,
+  "validation_policy": "15% per-user validation split drawn only from official train.csv",
+  "alpha_policy": "selected on validation NDCG@10; test evaluated once",
+  "mood_target_policy": "dominant mood group from visible history, then user_mood_target shrinkage",
+  "candidate_policy": "full fitted catalogue minus observed training history",
+  "mood_profile_coverage_train": 1.0,
+  "train_rows": 193258,
+  "test_rows": 48088,
+  "train_users": 10000,
+  "train_tracks": 17691,
+  "taste_models_file": "/Users/nhule/Desktop/UIT-DS-SJ/DS300/project/music-mood-recsys/src/models.py",
+  "taste_evaluate_file": "/Users/nhule/Desktop/UIT-DS-SJ/DS300/project/music-mood-recsys/src/evaluate.py",
+  "python": "3.13.13",
+  "numpy": "2.5.0",
+  "pandas": "3.0.3"
+}
