@@ -154,6 +154,7 @@ Nguồn: mô hình gu thật của TV2 (`music-mood-recsys` commit `357b4c2` + `
 ### Việc cần nhóm chốt sau Phần IV
 - ~~**TV2**: push thêm `data.py` + `evaluate.py`; merge nhánh `han/taste-als-report`~~ →
   **✅ xong 22/11** (commit `26516b5` + PR #2, `main` nay ở `d359738`). Cần `git pull` về máy.
-- **TV3**: chạy lại **A2** bằng cấu hình gu chính thức (`binary`, 8 vòng) — hiện A2 và G1 dùng
-  hai mô hình gu khác nhau.
+- ~~**TV3**: chạy lại **A2** bằng cấu hình gu chính thức~~ → **✅ xong 22/11, kết luận KHÔNG ĐỔI**:
+  +24,3% (cohort đầy đủ, 18.001 cặp) và +25,2% (cohort 10k của G1). Báo cáo dùng **+24,3%**;
+  giữ +24,0% (`log`/15) làm phép kiểm tra độ bền. Chi tiết: `reports/RESULTS.md` mục 27.
 - **Cả nhóm**: bổ sung bootstrap CI theo user; chênh −0,92% chưa đủ để kết luận chắc "ngang nhau".
