@@ -1,10 +1,17 @@
-data/
+# Dữ liệu: loại hết, chỉ giữ lại các bảng summary nhỏ (<1KB) làm bằng chứng số liệu
+data/*
+!data/processed/
+data/processed/*
+!data/processed/*_summary_*.csv
+!data/processed/cohort_*.csv
 models/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .venv/
 .env.local
+
+# Phần IV (G1): dump xếp hạng từng user, ~8MB/file, tái tạo bằng evaluate_catalogue.py
 reports/results/**/*_recommendations.csv
 .pytest_cache/
 .DS_Store

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -34,7 +35,8 @@ from . import api
 from .config import FIGURES_DIR, GROUPS, PROCESSED_DIR, SEED, load_config
 from .evaluate_mood import hidden_for_user, ndcg_at_k
 from .io import load_history
-from .taste import COHORT_CSV, load_als, taste_hybrid, taste_models, taste_scores
+from .taste import (COHORT_CSV, load_als, taste_hybrid, taste_models, taste_scores,
+                    variant_tag)
 
 SETS = ["set1_gu_va_tamtrang", "set2_chi_gu", "set3_chi_tamtrang", "set4_khong_gi"]
 RANKERS = ["random", "pop", "taste", "mood", "hybrid30", "hybrid50", "hybrid70"]
@@ -230,20 +232,35 @@ def main() -> None:
                         help="official = bộ chia chung của nhóm; local = bộ chia cũ che 30%%")
     parser.add_argument("--weight", choices=["playcount", "engagement_score"],
                         default="playcount", help="trọng số tin cậy đã dùng khi luyện ALS")
+    parser.add_argument("--als-weighting", choices=["log", "binary"], default="log",
+                        help="hàm tin cậy của ALS đã luyện; 'binary' là cấu hình TV2 chọn 22/11")
+    parser.add_argument("--als-iterations", type=int, default=15,
+                        help="số vòng ALS đã luyện; TV2 chọn 8")
+    parser.add_argument("--cohort-tag", default="",
+                        help="nhãn cohort của ALS đã luyện, ví dụ g1_10k")
+    parser.add_argument("--users-file", type=Path, default=None,
+                        help="CSV có cột user_id: chỉ đánh giá đúng các user này")
     args = parser.parse_args()
+    variant = variant_tag(args.als_weighting, args.als_iterations, args.cohort_tag)
 
     cfg = load_config()
     profiles = api.load_mood_profiles()
-    als = load_als(args.split, args.weight)
+    als = load_als(args.split, args.weight, variant)
     pop = fit_popularity(als)
     print(f"Mô hình gu: ALS {len(als.users):,} user x {len(als.items):,} bài "
-          f"({als.config['factors']} factor, trọng số {args.weight})")
+          f"({als.config['factors']} factor, cột {args.weight}, "
+          f"weighting={als.config['weighting']}, {als.config['iterations']} vòng)")
 
     n_users = 500 if args.sample else args.n_users
     if args.split == "official":
         from .splits import official_split, user_views
         train, test = official_split(set(profiles.index))
         users = np.sort(train["user_id"].unique())
+        if args.users_file is not None:
+            wanted = set(pd.read_csv(args.users_file, dtype={"user_id": str})
+                         .user_id.astype(str).str.strip())
+            users = np.sort(np.array([u for u in users if u in wanted]))
+            print(f"Giới hạn đánh giá theo {args.users_file.name}: {len(users):,} user")
         if n_users < len(users):
             users = np.sort(np.random.default_rng(SEED).choice(users, size=n_users,
                                                                replace=False))
@@ -279,6 +296,7 @@ def main() -> None:
     tag = "_official" if args.split == "official" else ""
     if args.weight != "playcount":
         tag += "_engage"
+    tag += variant
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     res.to_csv(PROCESSED_DIR / f"four_sets_eval_n{args.n_per_set}{tag}.csv", index=False)
     summary.to_csv(PROCESSED_DIR / f"four_sets_summary_n{args.n_per_set}{tag}.csv")
