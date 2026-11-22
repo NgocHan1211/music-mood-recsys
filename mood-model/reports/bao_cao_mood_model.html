@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mô hình tâm trạng âm nhạc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: thanh điều hướng dọc bám trái + cột nội dung 70ch, xuống 1 cột ở màn hình hẹp */
+:root{
+  --bg:#f7f8fa; --surface:#ffffff; --surface-2:#eef1f6;
+  --fg:#16202e; --fg-muted:#5a6779; --line:#d9dfe8;
+  --accent:#2f5d87; --accent-soft:#e3edf6;
+  --vui:#c9962a; --buon:#4477aa; --thugian:#4e9e5a; --nangdong:#d9455f; --cangthang:#8b3fa8;
+  --good:#2f7d4f; --warn:#9a6700; --bad:#a63a3a;
+  --font-display:'Lora',Georgia,'Times New Roman',serif;
+  --font-body:'Be Vietnam Pro','Segoe UI',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161d; --surface:#171e27; --surface-2:#1f2832;
+    --fg:#e6ebf2; --fg-muted:#9aa7b8; --line:#2b3542;
+    --accent:#7fb2dd; --accent-soft:#1c2b3a;
+    --vui:#e0b254; --buon:#7fb2dd; --thugian:#79c389; --nangdong:#f0788c; --cangthang:#bb86d6;
+    --good:#6cc48d; --warn:#dfb152; --bad:#e58080;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11161d; --surface:#171e27; --surface-2:#1f2832;
+  --fg:#e6ebf2; --fg-muted:#9aa7b8; --line:#2b3542;
+  --accent:#7fb2dd; --accent-soft:#1c2b3a;
+  --vui:#e0b254; --buon:#7fb2dd; --thugian:#79c389; --nangdong:#f0788c; --cangthang:#bb86d6;
+  --good:#6cc48d; --warn:#dfb152; --bad:#e58080;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:var(--font-body); font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.wrap{
+  max-width:1180px; margin:0 auto;
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px));
+}
+
+/* ---------- Đầu trang ---------- */
+header.hero{background:var(--surface); border-bottom:1px solid var(--line)}
+.hero-inner{padding-block:46px 34px}
+.eyebrow{
+  font-size:.74rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--fg-muted); font-weight:600; margin:0 0 14px;
+}
+h1{
+  font-family:var(--font-display); font-weight:600; font-size:clamp(1.9rem,4.4vw,3rem);
+  line-height:1.15; margin:0 0 14px; text-wrap:balance; letter-spacing:-.01em;
+}
+.lede{font-size:1.06rem; color:var(--fg-muted); max-width:66ch; margin:0 0 26px}
+.meta{display:flex; flex-wrap:wrap; gap:10px 22px; font-size:.84rem; color:var(--fg-muted)}
+.meta b{color:var(--fg); font-weight:600}
+
+/* ---------- Ô số liệu ---------- */
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-top:30px}
+.kpi{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:16px 18px}
+.kpi .k-label{font-size:.76rem; text-transform:uppercase; letter-spacing:.08em; color:var(--fg-muted); font-weight:600}
+.kpi .k-value{font-family:var(--font-mono); font-size:1.72rem; font-weight:500; line-height:1.2; margin-top:6px; font-variant-numeric:tabular-nums}
+.kpi .k-note{font-size:.82rem; color:var(--fg-muted); margin-top:4px}
+.k-up{color:var(--good)} .k-down{color:var(--bad)}
+
+/* ---------- Bố cục chính ---------- */
+.layout{display:grid; grid-template-columns:208px minmax(0,1fr); gap:48px; padding-block:40px 70px; align-items:start}
+nav.toc{position:sticky; top:20px; font-size:.88rem}
+nav.toc h2{font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--fg-muted); margin:0 0 12px}
+nav.toc ol{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+nav.toc a{
+  display:block; padding:6px 10px; border-radius:6px; text-decoration:none;
+  color:var(--fg-muted); border-left:2px solid transparent;
+}
+nav.toc a:hover{background:var(--surface-2); color:var(--fg)}
+nav.toc a.active{color:var(--accent); background:var(--accent-soft); border-left-color:var(--accent); font-weight:600}
+nav.toc a:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+main{min-width:0; display:flex; flex-direction:column; gap:58px}
+section{scroll-margin-top:24px}
+.sec-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:6px}
+.tag-id{
+  font-family:var(--font-mono); font-size:.8rem; font-weight:500; color:var(--accent);
+  background:var(--accent-soft); padding:3px 9px; border-radius:5px; border:1px solid var(--line);
+}
+h2.sec-title{font-family:var(--font-display); font-weight:600; font-size:1.58rem; margin:0; letter-spacing:-.01em; text-wrap:balance}
+.sec-sub{color:var(--fg-muted); margin:0 0 22px; max-width:70ch}
+h3{font-size:1.02rem; font-weight:600; margin:26px 0 10px; letter-spacing:.01em}
+p{margin:0 0 14px; max-width:70ch}
+ul,ol.list{margin:0 0 14px; padding-left:22px; max-width:70ch}
+li{margin-bottom:6px}
+code{font-family:var(--font-mono); font-size:.86em; background:var(--surface-2); padding:1px 5px; border-radius:4px; border:1px solid var(--line)}
+strong{font-weight:600}
+
+/* ---------- Bảng ---------- */
+.table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:9px; background:var(--surface); margin-bottom:16px}
+table{border-collapse:collapse; width:100%; font-size:.9rem}
+caption{caption-side:bottom; text-align:left; padding:10px 14px; color:var(--fg-muted); font-size:.82rem}
+th,td{padding:9px 14px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap}
+th{font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; color:var(--fg-muted); font-weight:600; background:var(--surface-2)}
+td.num,th.num{text-align:right; font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+tr.best td{background:var(--accent-soft); font-weight:600}
+td.wrap-cell{white-space:normal; min-width:160px}
+
+/* ---------- Các khối nhấn ---------- */
+.callout{border-left:3px solid var(--accent); background:var(--surface); padding:14px 18px; border-radius:0 8px 8px 0; margin:18px 0; border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line)}
+.callout p:last-child{margin-bottom:0}
+.callout .c-label{font-size:.74rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700; color:var(--accent); display:block; margin-bottom:6px}
+.callout.warn{border-left-color:var(--warn)} .callout.warn .c-label{color:var(--warn)}
+.callout.bad{border-left-color:var(--bad)} .callout.bad .c-label{color:var(--bad)}
+.callout.good{border-left-color:var(--good)} .callout.good .c-label{color:var(--good)}
+
+/* ---------- Hình ---------- */
+figure{margin:20px 0; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px; max-width:100%}
+figure img{display:block; width:100%; height:auto; max-width:100%; border-radius:5px}
+figcaption{font-size:.84rem; color:var(--fg-muted); margin-top:10px; padding:0 2px}
+
+/* ---------- Sơ đồ luồng (SVG nội tuyến) ---------- */
+.flow-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:16px 14px; margin:20px 0}
+.flow{display:block; min-width:700px; width:100%; height:auto; color:var(--fg)}
+.flow .bx{fill:var(--surface-2); stroke:currentColor; stroke-opacity:.28; stroke-width:1}
+.flow .bx-io{fill:none; stroke:currentColor; stroke-opacity:.3; stroke-width:1; stroke-dasharray:5 4}
+.flow text{font-family:var(--font-body); fill:currentColor}
+.flow .f-title{font-size:13px; font-weight:600}
+.flow .f-sub{font-size:11.5px; fill:var(--fg-muted)}
+.flow .f-file{font-family:var(--font-mono); font-size:10.5px; fill:var(--fg-muted)}
+.flow .f-edge{stroke:currentColor; stroke-opacity:.5; stroke-width:1.4; fill:none}
+.flow .f-lbl{font-size:10.5px; fill:var(--fg-muted)}
+.flow .f-accent{fill:var(--accent); font-weight:600}
+.flow .f-arrow{fill:currentColor; fill-opacity:.5}
+
+/* ---------- Chip nhóm tâm trạng ---------- */
+.chip{display:inline-flex; align-items:center; gap:6px; font-size:.84rem; font-weight:500; white-space:nowrap}
+.chip::before{content:""; width:9px; height:9px; border-radius:50%; background:var(--dot,var(--fg-muted)); flex:none}
+.c-vui{--dot:var(--vui)} .c-buon{--dot:var(--buon)} .c-thugian{--dot:var(--thugian)}
+.c-nangdong{--dot:var(--nangdong)} .c-cangthang{--dot:var(--cangthang)}
+.chips{display:flex; flex-wrap:wrap; gap:8px 18px; margin:14px 0 20px}
+
+/* ---------- Thẻ 2 cột ---------- */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:14px; margin:18px 0}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:15px 17px}
+.card h4{margin:0 0 7px; font-size:.95rem; font-weight:600}
+.card p{margin:0; font-size:.89rem; color:var(--fg-muted)}
+
+/* ---------- Thanh so sánh ---------- */
+.bars{display:flex; flex-direction:column; gap:11px; margin:18px 0 22px}
+.bar-row{display:grid; grid-template-columns:minmax(120px,160px) minmax(0,1fr) 62px; gap:12px; align-items:center; font-size:.88rem}
+.bar-track{background:var(--surface-2); border-radius:4px; height:21px; overflow:hidden; border:1px solid var(--line)}
+.bar-fill{height:100%; background:var(--accent); border-radius:3px 0 0 3px}
+.bar-fill.muted{background:var(--fg-muted); opacity:.55}
+.bar-val{font-family:var(--font-mono); font-variant-numeric:tabular-nums; text-align:right; font-size:.86rem}
+
+/* ---------- Bước hành trình ---------- */
+.steps{display:flex; flex-direction:column; gap:0; margin:18px 0; border:1px solid var(--line); border-radius:9px; overflow:hidden}
+.step{display:grid; grid-template-columns:34px minmax(0,1fr) 72px 104px; gap:12px; align-items:center; padding:9px 14px; background:var(--surface); border-bottom:1px solid var(--line); font-size:.88rem}
+.step:last-child{border-bottom:none}
+.step .s-n{font-family:var(--font-mono); color:var(--fg-muted); font-size:.82rem}
+.step .s-track{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.step .s-track em{font-style:normal; color:var(--fg-muted)}
+.step .s-val{font-family:var(--font-mono); font-variant-numeric:tabular-nums; text-align:right; font-size:.84rem}
+
+footer{border-top:1px solid var(--line); background:var(--surface); margin-top:0}
+.foot-inner{padding-block:28px 40px; font-size:.86rem; color:var(--fg-muted)}
+.foot-inner p{max-width:72ch}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr; gap:26px}
+  nav.toc{position:static; border-bottom:1px solid var(--line); padding-bottom:16px}
+  nav.toc ol{flex-direction:row; flex-wrap:wrap; gap:6px}
+  nav.toc a{border-left:none; border:1px solid var(--line)}
+  nav.toc a.active{border-color:var(--accent)}
+  .step{grid-template-columns:28px minmax(0,1fr) 64px; }
+  .step .s-mood{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <p class="eyebrow">DS300 · Hệ gợi ý nhạc theo gu và tâm trạng · Phần việc TV3</p>
+    <h1>Mô hình tâm trạng học từ tag Last.fm</h1>
+    <p class="lede">
+      Gán hồ sơ tâm trạng cho 50.683 bài hát bằng tag của người nghe và đặc trưng âm thanh Spotify,
+      rồi học vị trí 5 nhóm tâm trạng trên thanh kéo từ chính dữ liệu thay vì đặt tay.
+      Trang này tóm tắt tám bước T1–T8, ba việc Phần II (ghép thật với mô hình gu của TV2 và hai cải tiến thử từ tài liệu tham khảo), và lần chạy lại toàn bộ trên bộ dữ liệu chính thức của nhóm. Mọi số liệu lấy trực tiếp từ các lần chạy.
+    </p>
+    <div class="meta">
+      <span><b>Dữ liệu:</b> Million Song Dataset + Spotify + Last.fm</span>
+      <span><b>Bài hát:</b> 50.683</span>
+      <span><b>Lịch sử nghe:</b> 9,7 triệu lượt</span>
+      <span><b>Kiểm thử:</b> 95/95 test qua</span>
+      <span><b>Cập nhật:</b> 02/11/2026</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="k-label">macro-F1 bộ phân loại</div>
+        <div class="k-value">0,571</div>
+        <div class="k-note"><span class="k-up">+57,4%</span> so với baseline 0,363</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">Recall@20 cá nhân hóa</div>
+        <div class="k-value">0,0711</div>
+        <div class="k-note"><span class="k-up">+2,7%</span> so với tọa độ tự đặt, trên dữ liệu chính thức</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">Bài có hồ sơ tâm trạng</div>
+        <div class="k-value">50.683</div>
+        <div class="k-note">26.752 từ tag · 23.931 từ mô hình</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">Ghép với mô hình gu (A2)</div>
+        <div class="k-value">+24,0%</div>
+        <div class="k-note">NDCG@3 ở tập đúng gu <b>và</b> đúng tâm trạng, so với chỉ dùng gu</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label">Tag cảm xúc thật có</div>
+        <div class="k-value">5 / 100</div>
+        <div class="k-note">rào cản lớn nhất của cả module</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+
+  <nav class="toc" aria-label="Mục lục">
+    <h2>Các bước</h2>
+    <ol>
+      <li><a href="#sodo">Sơ đồ tổng thể</a></li>
+      <li><a href="#t1">T1 · Kiểm kê tag</a></li>
+      <li><a href="#t2">T2 · Nhãn yếu</a></li>
+      <li><a href="#t3">T3 · Bộ phân loại</a></li>
+      <li><a href="#t4">T4 · Không gian tâm trạng</a></li>
+      <li><a href="#t5">T5 · API cho TV2</a></li>
+      <li><a href="#t6">T6 · Cá nhân hóa</a></li>
+      <li><a href="#t7">T7 · Hành trình cảm xúc</a></li>
+      <li><a href="#t8">T8 · Tổng kết</a></li>
+      <li><a href="#a2">A2 · Ghép với mô hình gu</a></li>
+      <li><a href="#a1">A1 · Nhãn bằng embedding</a></li>
+      <li><a href="#a3">A3 · Ngầm so với tỏ</a></li>
+      <li><a href="#phan3">Chạy lại trên dữ liệu chính thức</a></li>
+      <li><a href="#hanche">Hạn chế</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ===================== Sơ đồ tổng thể ===================== -->
+    <section id="sodo">
+      <div class="sec-head"><h2 class="sec-title">Sơ đồ tổng thể luồng xử lý</h2></div>
+      <p class="sec-sub">Tám bước T1–T8 nối thành một đường đi của dữ liệu: từ tag thô đến điểm tâm trạng mà mô hình gu của TV2 gọi được.</p>
+
+      <figure>
+        <div class="flow-wrap">
+        <svg class="flow" viewBox="0 0 940 745" role="img"
+             aria-label="Sơ đồ luồng: Music_Info.csv đi qua gán nhãn yếu từ tag, phần có nhãn dùng huấn luyện LightGBM trên đặc trưng âm thanh, bằng chứng tag và xác suất mô hình được trộn thành track_mood.parquet, từ đó học tâm 5 nhóm thành mood_centroids.json, api.py nhận thanh kéo và tâm chung, nhánh lịch sử nghe tạo tâm riêng người dùng, cuối cùng sinh hành trình cảm xúc 8 bước.">
+          <defs>
+            <marker id="fw-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path class="f-arrow" d="M0,1 L10,5 L0,9 z"/>
+            </marker>
+          </defs>
+
+          <!-- nguồn dữ liệu -->
+          <rect class="bx-io" x="110" y="16" width="390" height="52" rx="8"/>
+          <text class="f-title" x="126" y="38">Music_Info.csv — dữ liệu đầu vào</text>
+          <text class="f-sub" x="126" y="56">50.683 bài · tag Last.fm + 11 đặc trưng âm thanh Spotify</text>
+          <path class="f-edge" d="M305,68 V100" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="318" y="89">chuẩn hóa tag, lọc bài lỗi</text>
+
+          <!-- T1 + T2 -->
+          <rect class="bx" x="110" y="104" width="390" height="70" rx="8"/>
+          <text class="f-title" x="126" y="128">T1 + T2 · Gán nhãn yếu từ tag</text>
+          <text class="f-sub" x="126" y="147">53 tag có trọng số → xác suất 5 nhóm, bỏ bài mâu thuẫn</text>
+          <text class="f-file" x="126" y="164">26.752 bài có nhãn · 23.931 bài chưa có nhãn</text>
+          <path class="f-edge" d="M305,174 V210" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="318" y="196">chỉ 26.752 bài có nhãn</text>
+
+          <!-- T3 -->
+          <rect class="bx" x="110" y="214" width="390" height="70" rx="8"/>
+          <text class="f-title" x="126" y="238">T3 · Bộ phân loại LightGBM 5 lớp</text>
+          <text class="f-sub" x="126" y="257">GroupKFold theo nghệ sĩ · macro-F1 0,571</text>
+          <text class="f-file f-accent" x="126" y="274">đầu vào chỉ là đặc trưng âm thanh — không có tag</text>
+          <path class="f-edge" d="M305,284 V326" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="318" y="309">xác suất cho 23.931 bài chưa có nhãn</text>
+
+          <!-- đường tắt: bằng chứng tag đi thẳng xuống bước trộn -->
+          <path class="f-edge" d="M110,139 H84 V365 H106" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="70" y="252" text-anchor="middle" transform="rotate(-90 70 252)">bằng chứng tag · trọng số 0,7</text>
+
+          <!-- T5 trộn -->
+          <rect class="bx" x="110" y="330" width="390" height="70" rx="8"/>
+          <text class="f-title" x="126" y="354">Trộn hai nguồn bằng chứng</text>
+          <text class="f-sub" x="126" y="373">p = 0,7 × tag + 0,3 × mô hình (bài có tag giữ nhãn của tag)</text>
+          <text class="f-file" x="126" y="390">→ track_mood.parquet · 50.683 bài × 5 xác suất</text>
+          <path class="f-edge" d="M305,400 V436" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="318" y="422">valence × energy có trọng số xác suất</text>
+
+          <!-- T4 -->
+          <rect class="bx" x="110" y="440" width="390" height="70" rx="8"/>
+          <text class="f-title" x="126" y="464">T4 · Học vị trí 5 nhóm từ dữ liệu</text>
+          <text class="f-sub" x="126" y="483">tâm μ và hiệp phương sai Σ trên mặt phẳng valence × energy</text>
+          <text class="f-file" x="126" y="500">→ mood_centroids.json</text>
+          <path class="f-edge" d="M305,510 V552" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="318" y="535">tọa độ 5 nhóm thay cho điểm đặt tay</text>
+
+          <!-- T5 api -->
+          <rect class="bx" x="110" y="556" width="390" height="70" rx="8"/>
+          <text class="f-title" x="126" y="580">T5 · api.py — hợp đồng bàn giao TV2</text>
+          <text class="f-sub" x="126" y="599">slider_to_mood() → mood_scores(track_ids, slider)</text>
+          <text class="f-file" x="126" y="616">điểm 0–1 mỗi bài, TV2 nhân với điểm gu</text>
+          <path class="f-edge" d="M305,626 V662" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="318" y="648">chọn bài theo từng chặng</text>
+
+          <!-- thanh kéo -->
+          <rect class="bx-io" x="1" y="570" width="85" height="42" rx="8"/>
+          <text class="f-sub" x="43" y="588" text-anchor="middle">thanh kéo</text>
+          <text class="f-sub" x="43" y="603" text-anchor="middle">0 → 1</text>
+          <path class="f-edge" d="M86,591 H106" marker-end="url(#fw-arrow)"/>
+
+          <!-- T7 -->
+          <rect class="bx" x="110" y="666" width="390" height="56" rx="8"/>
+          <text class="f-title" x="126" y="690">T7 · Hành trình cảm xúc</text>
+          <text class="f-sub" x="126" y="708">8 bước đi dần từ tâm trạng A sang tâm trạng B</text>
+
+          <!-- nhánh lịch sử nghe -->
+          <rect class="bx-io" x="580" y="330" width="330" height="56" rx="8"/>
+          <text class="f-title" x="596" y="353">User_Listening_History.csv</text>
+          <text class="f-sub" x="596" y="371">9,7 triệu lượt nghe thật</text>
+          <path class="f-edge" d="M745,386 V436" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="758" y="412">lọc user ≥ 10 bài</text>
+
+          <rect class="bx" x="580" y="440" width="330" height="70" rx="8"/>
+          <text class="f-title" x="596" y="464">T6 · Cá nhân hóa</text>
+          <text class="f-sub" x="596" y="483">μ người dùng = tâm các bài đã nghe</text>
+          <text class="f-file" x="596" y="500">co về tâm chung, k = 10</text>
+
+          <!-- tâm chung chảy sang nhánh cá nhân -->
+          <path class="f-edge" d="M500,475 H576" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="538" y="468" text-anchor="middle">tâm chung</text>
+
+          <!-- tâm riêng quay lại api -->
+          <path class="f-edge" d="M745,510 V591 H506" marker-end="url(#fw-arrow)"/>
+          <text class="f-lbl" x="738" y="583" text-anchor="end">tâm riêng người dùng</text>
+        </svg>
+        </div>
+        <figcaption>
+          Đường đi của dữ liệu qua tám bước. Hai chỗ quyết định chất lượng cả module:
+          <b>bộ phân loại không được nhìn thấy tag</b> (mũi tên tô đậm) vì tag chính là nguồn sinh nhãn — cho nhìn là rò rỉ;
+          và <b>tag đi thẳng xuống bước trộn</b> với trọng số 0,7, nên bài nào đã có tag cảm xúc thì mô hình chỉ chỉnh nhẹ, bài không có tag mới do mô hình quyết.
+          Nhánh phải là cá nhân hóa: tâm riêng của người dùng được co về tâm chung theo công thức
+          μ′ = (n·μ<sub>user</sub> + 10·μ<sub>chung</sub>) / (n + 10), nên người nghe ít bài vẫn không bị lệch.
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <span class="c-label">Đọc sơ đồ theo ba chặng</span>
+        <p><b>Chặng 1 — có nhãn (T1→T3):</b> tag cho nhãn một nửa số bài, nửa đó dùng để dạy mô hình đoán tâm trạng chỉ từ âm thanh.
+        <b>Chặng 2 — phủ hết (T3→T4):</b> mô hình điền tâm trạng cho nửa còn lại, trộn lại thành hồ sơ đủ 50.683 bài, rồi từ hồ sơ đó đo ra vị trí 5 nhóm.
+        <b>Chặng 3 — dùng được (T5→T7):</b> thanh kéo và lịch sử nghe biến vị trí đó thành điểm số cho từng bài, cuối cùng xâu thành một hành trình.</p>
+      </div>
+    </section>
+
+    <!-- ===================== T1 ===================== -->
+    <section id="t1">
+      <div class="sec-head"><span class="tag-id">T1</span><h2 class="sec-title">Kiểm kê tag và rà dữ liệu</h2></div>
+      <p class="sec-sub">Trả lời câu hỏi nền tảng: tag Last.fm trong bộ dữ liệu này có đủ để sinh nhãn tâm trạng không?</p>
+
+      <h3>Phân loại 100 tag</h3>
+      <p>Bộ dữ liệu chỉ có đúng 100 tag khác nhau. Mỗi tag được xếp vào một loại theo thứ tự ưu tiên
+      thập niên → quốc gia → thể loại → mô tả → cảm xúc.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Loại tag</th><th class="num">Số tag</th><th class="num">Lượt gán</th><th>Ví dụ</th></tr></thead>
+          <tbody>
+            <tr><td>Thể loại</td><td class="num">74</td><td class="num">142.304</td><td class="wrap-cell">rock (10.684), indie (7.287), electronic (6.594)</td></tr>
+            <tr><td>Mô tả (giọng hát, nhạc cụ)</td><td class="num">7</td><td class="num">14.072</td><td class="wrap-cell">female_vocalists (4.517), instrumental, acoustic, cover</td></tr>
+            <tr><td>Thập niên</td><td class="num">6</td><td class="num">11.025</td><td class="wrap-cell">80s (2.307), 90s (2.165), oldies (1.422)</td></tr>
+            <tr class="best"><td>Cảm xúc</td><td class="num">5</td><td class="num">9.697</td><td class="wrap-cell">chillout, mellow, beautiful, love, chill</td></tr>
+            <tr><td>Quốc gia</td><td class="num">8</td><td class="num">8.215</td><td class="wrap-cell">british (2.410), american (1.423)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout bad">
+        <span class="c-label">Phát hiện quyết định hướng đi của cả module</span>
+        <p>Chỉ <strong>5/100 tag</strong> là tag cảm xúc, và cả 5 nằm cùng một vùng valence–energy (valence 0,29–0,42;
+        energy 0,44–0,56). <strong>25 tag ứng viên trong cấu hình không hề tồn tại</strong> trong dữ liệu:
+        happy, sad, angry, energetic, relaxing, upbeat, melancholy, aggressive…</p>
+        <p>Hệ quả: nếu chỉ dùng tag cảm xúc trực tiếp thì <span class="chip c-thugian">Thư giãn</span> có 4.618 bài,
+        <span class="chip c-buon">Buồn</span> 1.825 bài, còn <span class="chip c-vui">Vui</span>,
+        <span class="chip c-nangdong">Năng động</span>, <span class="chip c-cangthang">Căng thẳng</span> đều <strong>0 bài</strong>.</p>
+      </div>
+
+      <figure>
+        <img src="figures/top30_tags.png" alt="Biểu đồ cột ngang 30 tag Last.fm phổ biến nhất, tô màu theo loại tag">
+        <figcaption>Top 30 tag theo tần suất. Trong 30 tag phổ biến nhất chỉ có hai tag cảm xúc là <code>chillout</code> và <code>mellow</code>.</figcaption>
+      </figure>
+
+      <h3>Rà bài nghi ghép nhầm phiên bản</h3>
+      <p>Báo cáo EDA nghi ngờ vài bài phổ biến là bản cover. Kiểm chứng cho thấy cả hai bài được nêu
+      đều mang tag <code>cover</code>: bản “Bring Me To Life” của Katherine Jenkins có energy 0,563
+      trong khi bản gốc Evanescence là 0,930 — audio và tag lệch hẳn nhau.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dấu hiệu</th><th class="num">Số bài</th><th>Mức</th><th>Xử lý</th></tr></thead>
+          <tbody>
+            <tr><td>Có tag <code>cover</code></td><td class="num">953</td><td>mạnh</td><td>loại khỏi huấn luyện</td></tr>
+            <tr><td>Tên chứa live / remix / remaster</td><td class="num">285</td><td>mạnh</td><td>loại khỏi huấn luyện</td></tr>
+            <tr><td>Thời lượng bất thường</td><td class="num">118</td><td>mạnh</td><td>loại khỏi huấn luyện</td></tr>
+            <tr><td><code>spotify_id</code> trùng</td><td class="num">18</td><td>mạnh</td><td>loại khỏi huấn luyện</td></tr>
+            <tr><td>Lệch tag thập niên &gt; 20 năm</td><td class="num">2.752</td><td>yếu</td><td>chỉ ghi nhận</td></tr>
+            <tr><td>Trùng tên bài với nghệ sĩ khác</td><td class="num">1.614</td><td>yếu</td><td>chỉ ghi nhận</td></tr>
+          </tbody>
+          <caption>Lệch thập niên bị xếp mức yếu vì phần lớn là nhạc mới gắn tag theo phong cách
+          (Chelsea Wolfe phát hành 2017 gắn tag <code>90s</code>), không phải bản cover.
+          Tổng cộng 1.367 bài (2,70%) bị loại khỏi tập huấn luyện.</caption>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== T2 ===================== -->
+    <section id="t2">
+      <div class="sec-head"><span class="tag-id">T2</span><h2 class="sec-title">Nhãn yếu từ tag</h2></div>
+      <p class="sec-sub">Cải tiến 1: thay vì “bài có tag X thì thuộc nhóm Y”, mỗi bài nhận một phân phối xác suất trên 5 nhóm.</p>
+
+      <h3>Bảng trọng số 53 tag</h3>
+      <p>Vì ba nhóm không có tag cảm xúc nào, nhóm bổ sung <strong>tag thể loại mang cảm xúc rõ</strong> làm bằng chứng
+      phụ với trọng số thấp hơn. Mọi tag đều có thật trong dữ liệu và có test chặn việc bịa tag.</p>
+      <div class="cards">
+        <div class="card"><h4>4 tag trực tiếp &times; 1,0</h4><p><code>chill</code>, <code>chillout</code>, <code>mellow</code>, <code>beautiful</code> — tag cảm xúc thật của người nghe.</p></div>
+        <div class="card"><h4>49 tag hỗ trợ &times; 0,5</h4><p>reggae/ska/funk → Vui · house/techno/dance → Năng động · metalcore/death_metal → Căng thẳng · post_rock/emo/doom → Buồn.</p></div>
+        <div class="card"><h4>Đã loại</h4><p><code>love</code> (hồ sơ âm thanh trùng trung bình chung) và <code>psychedelic</code> (là tên phong cách, không phải tâm trạng).</p></div>
+      </div>
+
+      <p>Nhãn mềm = tổng trọng số các tag của bài, chuẩn hóa về tổng bằng 1. Ví dụ bài có
+      <code>chill</code> + <code>metal</code>: Thư giãn 0,667 · Căng thẳng 0,233 · Năng động 0,100.</p>
+
+      <h3>Kết quả trên 50.683 bài</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nhóm</th><th class="num">Số bài có nhãn</th><th class="num">valence</th><th class="num">energy</th><th>Tag dẫn dắt</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip c-vui">Vui</span></td><td class="num">2.446</td><td class="num">0,706</td><td class="num">0,643</td><td class="wrap-cell">soul, reggae, funk, ska</td></tr>
+            <tr><td><span class="chip c-buon">Buồn</span></td><td class="num">1.413</td><td class="num">0,228</td><td class="num">0,624</td><td class="wrap-cell">post_rock, beautiful, emo, dark_ambient</td></tr>
+            <tr><td><span class="chip c-thugian">Thư giãn</span></td><td class="num">8.562</td><td class="num">0,369</td><td class="num">0,474</td><td class="wrap-cell">chillout, folk, acoustic, ambient</td></tr>
+            <tr><td><span class="chip c-nangdong">Năng động</span></td><td class="num">4.012</td><td class="num">0,530</td><td class="num">0,829</td><td class="wrap-cell">dance, electro, techno, house</td></tr>
+            <tr><td><span class="chip c-cangthang">Căng thẳng</span></td><td class="num">10.319</td><td class="num">0,271</td><td class="num">0,933</td><td class="wrap-cell">metal, death_metal, heavy_metal</td></tr>
+          </tbody>
+          <caption>Giá trị valence/energy là trung vị. Ngoài 26.752 bài có nhãn cứng còn có 10.089 bài
+          <code>conflict</code> (không nhóm nào trội), 960 bài <code>suspect</code> và 12.882 bài không có tag dùng được.</caption>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <span class="c-label">Vấn đề gặp phải và cách xử lý</span>
+        <p>Với bảng trọng số ban đầu, nhóm <span class="chip c-buon">Buồn</span> chỉ được <strong>60 bài</strong> vì không tag nào
+        cho nó trọng số trội — <code>beautiful</code>, <code>dark_ambient</code>, <code>doom_metal</code>, <code>gothic</code>
+        đều chia 50/50 với nhóm khác nên luôn thua argmax. Nhóm đã thử 5 phương án và chọn cách
+        <strong>tăng trọng số theo valence</strong> (tag valence càng thấp càng nghiêng về Buồn), giữ nguyên hai ngưỡng.
+        Kết quả: 60 → <strong>1.413 bài</strong>, mọi nhóm đạt ngưỡng tối thiểu 300.</p>
+      </div>
+
+      <h3>Kiểm định Kruskal–Wallis</h3>
+      <p>Năm đặc trưng âm thanh đều khác nhau có ý nghĩa giữa các nhóm (p &lt; 1e-300), nhưng thứ tự mới là điều đáng chú ý:</p>
+      <div class="bars" role="img" aria-label="Thống kê H của kiểm định Kruskal-Wallis: acousticness 13660, energy 12369, danceability 8868, loudness 8050, valence 4819">
+        <div class="bar-row"><span>acousticness</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">13.660</span></div>
+        <div class="bar-row"><span>energy</span><div class="bar-track"><div class="bar-fill" style="width:90.5%"></div></div><span class="bar-val">12.369</span></div>
+        <div class="bar-row"><span>danceability</span><div class="bar-track"><div class="bar-fill" style="width:64.9%"></div></div><span class="bar-val">8.868</span></div>
+        <div class="bar-row"><span>loudness</span><div class="bar-track"><div class="bar-fill" style="width:58.9%"></div></div><span class="bar-val">8.050</span></div>
+        <div class="bar-row"><span><strong>valence</strong></span><div class="bar-track"><div class="bar-fill muted" style="width:35.3%"></div></div><span class="bar-val">4.819</span></div>
+      </div>
+      <p><strong>Valence tách nhóm yếu nhất</strong> trong năm đặc trưng — bằng chứng đầu tiên cho thấy thanh kéo
+      chỉ dùng hai trục valence và energy đã bỏ sót thông tin.</p>
+
+      <figure>
+        <img src="figures/mood_valence_energy_box.png" alt="Hai biểu đồ hộp so sánh valence và energy giữa năm nhóm tâm trạng">
+        <figcaption>Buồn và Căng thẳng gần như trùng nhau về valence (0,228 và 0,271), chỉ tách được nhờ energy (0,624 và 0,933).</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================== T3 ===================== -->
+    <section id="t3">
+      <div class="sec-head"><span class="tag-id">T3</span><h2 class="sec-title">Bộ phân loại từ đặc trưng âm thanh</h2></div>
+      <p class="sec-sub">Cải tiến 2: suy ra tâm trạng cho cả những bài không có tag. Đầu vào chỉ gồm 12 đặc trưng âm thanh, không dùng tag/genre/artist để tránh rò rỉ nhãn.</p>
+
+      <p>Đánh giá bằng <strong>GroupKFold 5 fold theo nghệ sĩ</strong>, nên cùng một nghệ sĩ không nằm ở cả tập huấn luyện
+      và tập kiểm tra. Tập huấn luyện gồm 26.752 bài có nhãn cứng của 5.314 nghệ sĩ.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mô hình</th><th class="num">Đặc trưng</th><th class="num">macro-F1</th><th class="num">accuracy</th><th class="num">log-loss</th><th class="num">F1 Buồn</th></tr></thead>
+          <tbody>
+            <tr><td>baseline_ve <em>(tọa độ tự đặt)</em></td><td class="num">2</td><td class="num">0,363</td><td class="num">0,440</td><td class="num">2,374</td><td class="num">0,170</td></tr>
+            <tr><td>logreg_ve</td><td class="num">2</td><td class="num">0,441</td><td class="num">0,524</td><td class="num">1,201</td><td class="num">0,195</td></tr>
+            <tr><td>logreg_full</td><td class="num">12</td><td class="num">0,516</td><td class="num">0,595</td><td class="num">1,042</td><td class="num">0,241</td></tr>
+            <tr class="best"><td>gbm_full <em>(LightGBM)</em></td><td class="num">12</td><td class="num">0,571</td><td class="num">0,677</td><td class="num">0,859</td><td class="num">0,239</td></tr>
+          </tbody>
+          <caption>Cả ba mô hình học được đều dùng <code>class_weight="balanced"</code> vì nhãn lệch 7,3:1.</caption>
+        </table>
+      </div>
+
+      <div class="cards">
+        <div class="card"><h4>Thêm đặc trưng có đáng không?</h4><p>Cùng Logistic Regression, macro-F1 tăng từ 0,441 lên 0,516 — <strong>+16,9%</strong> chỉ nhờ thêm 10 đặc trưng ngoài valence và energy.</p></div>
+        <div class="card"><h4>Hơn baseline bao nhiêu?</h4><p>So với cách gán nhóm theo tọa độ tự đặt: macro-F1 <strong>+57,4%</strong>, accuracy +53,9%, log-loss giảm 63,8%.</p></div>
+      </div>
+
+      <h3>Đặc trưng nào thật sự mang cảm xúc?</h3>
+      <p>Đo bằng mức giảm macro-F1 khi xáo trộn từng đặc trưng:</p>
+      <div class="bars" role="img" aria-label="Permutation importance: acousticness 0,1011; danceability 0,0994; energy 0,0608; valence 0,0399; instrumentalness 0,0377; tempo 0,0352">
+        <div class="bar-row"><span>acousticness</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">0,1011</span></div>
+        <div class="bar-row"><span>danceability</span><div class="bar-track"><div class="bar-fill" style="width:98.3%"></div></div><span class="bar-val">0,0994</span></div>
+        <div class="bar-row"><span>energy</span><div class="bar-track"><div class="bar-fill" style="width:60.1%"></div></div><span class="bar-val">0,0608</span></div>
+        <div class="bar-row"><span><strong>valence</strong></span><div class="bar-track"><div class="bar-fill muted" style="width:39.5%"></div></div><span class="bar-val">0,0399</span></div>
+        <div class="bar-row"><span>instrumentalness</span><div class="bar-track"><div class="bar-fill muted" style="width:37.3%"></div></div><span class="bar-val">0,0377</span></div>
+        <div class="bar-row"><span>tempo</span><div class="bar-track"><div class="bar-fill muted" style="width:34.8%"></div></div><span class="bar-val">0,0352</span></div>
+      </div>
+      <p><strong>Acousticness và danceability quan trọng hơn cả energy, và gấp 2,5 lần valence.</strong>
+      Hai trục của thanh kéo cũ không phải hai đặc trưng mang cảm xúc mạnh nhất.
+      <code>key</code> và <code>mode</code> gần như vô dụng: giọng trưởng hay thứ không giúp đoán tâm trạng trong bộ dữ liệu này.</p>
+
+      <figure>
+        <img src="figures/permutation_importance.png" alt="Biểu đồ permutation importance của 12 đặc trưng âm thanh">
+        <figcaption>Permutation importance của mô hình LightGBM, đo trên fold giữ lại, lặp 5 lần.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="figures/confusion_gbm_full.png" alt="Ma trận nhầm lẫn của mô hình LightGBM cho năm nhóm tâm trạng">
+        <figcaption>Ma trận nhầm lẫn (chuẩn hóa theo hàng). Nhóm Buồn chỉ đúng 0,29 và bị nhầm sang
+        Thư giãn (0,37) lẫn Căng thẳng (0,22) — đúng như hạn chế đã dự báo ở T2.</figcaption>
+      </figure>
+
+      <div class="callout">
+        <span class="c-label">Quyết định khác đặc tả: không hiệu chỉnh xác suất</span>
+        <p>Đặc tả yêu cầu hiệu chỉnh isotonic. Khi chạy thật, cả isotonic lẫn sigmoid đều làm
+        F1 nhóm Buồn rơi từ <strong>0,239 xuống 0,007</strong> — nhóm này gần như không bao giờ được dự đoán nữa,
+        vì hiệu chỉnh triệt tiêu tác dụng của <code>class_weight</code> với nhóm nhỏ nhất. Đổi lại chỉ được log-loss
+        nhỉnh hơn, còn <strong>ECE lại xấu đi</strong> (0,041 → 0,047). Vì ECE của mô hình gốc đã tốt sẵn nên nhóm chọn
+        giữ nguyên xác suất không hiệu chỉnh và ghi rõ lý do trong nhật ký quyết định.</p>
+      </div>
+
+      <figure>
+        <img src="figures/reliability.png" alt="Reliability diagram so sánh xác suất trước và sau hiệu chỉnh">
+        <figcaption>Mô hình gốc hơi quá tự tin một cách đều đặn; isotonic chỉnh quá tay thành thiếu tự tin ở vùng xác suất cao.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================== T4 ===================== -->
+    <section id="t4">
+      <div class="sec-head"><span class="tag-id">T4</span><h2 class="sec-title">Hồ sơ mọi bài và không gian tâm trạng</h2></div>
+      <p class="sec-sub">Cải tiến 3: vị trí các nhóm trên thanh kéo được học từ dữ liệu thay vì đặt tay.</p>
+
+      <h3>Hồ sơ tâm trạng cho cả 50.683 bài</h3>
+      <p>Bài có nhãn tag sạch được trộn 70% nhãn người nghe với 30% dự đoán mô hình; các bài còn lại
+      hoàn toàn do mô hình suy ra. Mỗi bài đúng một dòng, tổng xác suất bằng 1.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nguồn</th><th class="num">Số bài</th><th class="num">Tỷ lệ</th><th class="num">Độ tự tin TB</th></tr></thead>
+          <tbody>
+            <tr><td><code>mood_source = tag</code></td><td class="num">26.752</td><td class="num">52,8%</td><td class="num">0,768</td></tr>
+            <tr><td><code>mood_source = model</code></td><td class="num">23.931</td><td class="num">47,2%</td><td class="num">0,616</td></tr>
+          </tbody>
+          <caption>Mô hình thận trọng hơn ở phần dữ liệu không có bằng chứng từ người nghe — đúng như mong đợi.
+          Nhóm Buồn tăng từ 1.413 bài có nhãn tag lên 4.618 bài có hồ sơ, đây chính là tác dụng của cải tiến 2.</caption>
+        </table>
+      </div>
+
+      <h3>Tâm học được so với tọa độ tự đặt</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nhóm</th><th class="num">Tâm học được</th><th class="num">Tọa độ tự đặt</th><th class="num">Lệch</th></tr></thead>
+          <tbody>
+            <tr class="best"><td><span class="chip c-buon">Buồn</span></td><td class="num">(0,310; 0,589)</td><td class="num">(0,20; 0,30)</td><td class="num">0,309</td></tr>
+            <tr class="best"><td><span class="chip c-thugian">Thư giãn</span></td><td class="num">(0,402; 0,478)</td><td class="num">(0,60; 0,30)</td><td class="num">0,266</td></tr>
+            <tr><td><span class="chip c-vui">Vui</span></td><td class="num">(0,653; 0,643)</td><td class="num">(0,80; 0,75)</td><td class="num">0,182</td></tr>
+            <tr><td><span class="chip c-nangdong">Năng động</span></td><td class="num">(0,490; 0,795)</td><td class="num">(0,60; 0,90)</td><td class="num">0,152</td></tr>
+            <tr><td><span class="chip c-cangthang">Căng thẳng</span></td><td class="num">(0,295; 0,876)</td><td class="num">(0,25; 0,85)</td><td class="num">0,052</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Hai điểm đặt tay sai nhiều nhất: <strong>Buồn</strong> được đặt ở energy 0,30 nhưng nhạc buồn thật trong bộ này
+      có energy <strong>0,589</strong> — post_rock, emo, doom metal đều là nhạc buồn nhưng mạnh.
+      <strong>Thư giãn</strong> được đặt ở valence 0,60 nhưng thực tế chỉ 0,402, tức trầm hơn là tươi.
+      Chỉ Căng thẳng là đoán gần đúng.</p>
+
+      <figure>
+        <img src="figures/mood_space.png" alt="Biểu đồ phân tán valence-energy với ellipse một sigma của năm nhóm và mũi tên từ tọa độ tự đặt tới tâm học được">
+        <figcaption>Mỗi nhóm là một Gaussian hai chiều. Dấu X là tọa độ tự đặt cũ, chấm tròn là tâm học được,
+        mũi tên cho thấy mức sai lệch. Mỗi nhóm còn mang theo hiệp phương sai riêng để tính khoảng cách Mahalanobis.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================== T5 ===================== -->
+    <section id="t5">
+      <div class="sec-head"><span class="tag-id">T5</span><h2 class="sec-title">API bàn giao cho mô hình gu</h2></div>
+      <p class="sec-sub">Cải tiến 4: điểm hợp tâm trạng kết hợp xác suất nhóm với độ gần trên thanh kéo.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Hàm</th><th>Công dụng</th><th>Kết quả thật</th></tr></thead>
+          <tbody>
+            <tr><td><code>quick_mood(code)</code></td><td class="wrap-cell">Nút chọn nhanh → điểm trên thanh kéo</td><td class="num">(0,653; 0,643)</td></tr>
+            <tr><td><code>slider_to_mood(v, e)</code></td><td class="wrap-cell">Điểm thanh kéo → xác suất 5 nhóm</td><td class="wrap-cell">(0,3; 0,9) → Căng thẳng 55%</td></tr>
+            <tr><td><code>mood_scores(ids, v, e)</code></td><td class="wrap-cell">Độ hợp tâm trạng cho danh sách bài</td><td class="num">20.000 bài / 23 ms</td></tr>
+            <tr><td><code>user_mood_target(...)</code></td><td class="wrap-cell">Mục tiêu cá nhân hóa theo từng người</td><td class="wrap-cell">xem T6</td></tr>
+            <tr><td><code>mood_journey(...)</code></td><td class="wrap-cell">Danh sách điểm đi từ tâm trạng A tới B</td><td class="wrap-cell">xem T7</td></tr>
+          </tbody>
+          <caption>Yêu cầu hợp đồng là 20.000 bài dưới 1 giây; thực tế 23 ms, lần gọi sau chỉ 1 ms nhờ cache.</caption>
+        </table>
+      </div>
+
+      <h3>Công thức chấm điểm</h3>
+      <p><code>mood_score = 0,6 &times; p_target + 0,4 &times; prox</code>, trong đó <code>p_target</code> là xác suất bài thuộc
+      các nhóm mà điểm thanh kéo đang nghiêng về (gián tiếp dùng cả 12 đặc trưng qua bộ phân loại),
+      còn <code>prox</code> là độ gần Gaussian trên mặt phẳng valence–energy. Nhờ vậy thanh kéo vẫn tinh chỉnh
+      liên tục được mà điểm số không chỉ phụ thuộc hai con số.</p>
+
+      <div class="callout warn">
+        <span class="c-label">Lưu ý khi ghép với mô hình gu</span>
+        <p>Thang điểm thực tế chỉ chạy trong khoảng 0,02–0,65 chứ không trải hết [0; 1], vì xác suất của
+        điểm thanh kéo luôn bị chia cho 5 nhóm. Khi trộn <code>α × hợp_gu + (1 − α) × hợp_tâm_trạng</code>,
+        cần chuẩn hóa hai vế trên tập ứng viên, nếu không α sẽ không đúng nghĩa tỷ trọng và phần tâm trạng bị lép vế.</p>
+      </div>
+    </section>
+
+    <!-- ===================== T6 ===================== -->
+    <section id="t6">
+      <div class="sec-head"><span class="tag-id">T6</span><h2 class="sec-title">Cá nhân hóa và đánh giá trên lịch sử nghe thật</h2></div>
+      <p class="sec-sub">Cải tiến 5: “vui” của người nghe rock khác “vui” của người nghe acoustic.</p>
+
+      <p>Tâm cá nhân được tính từ các bài user đã nghe thuộc nhóm đó, có trọng số theo số lần nghe,
+      rồi co về tâm chung theo số bài: <code>μ' = (n·μ_user + 10·μ_chung) / (n + 10)</code>.
+      User càng ít dữ liệu thì càng nghiêng về tâm chung.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tham số đánh giá</th><th>Giá trị</th></tr></thead>
+          <tbody>
+            <tr><td>Lọc 10/10</td><td class="wrap-cell">7.051.696 lượt nghe · 290.898 user · 24.286 bài</td></tr>
+            <tr><td>User test</td><td class="wrap-cell">20% (seed 42), lấy mẫu 2.000 → 1.269 user đủ điều kiện</td></tr>
+            <tr><td>Che dữ liệu</td><td class="wrap-cell">30% số bài mỗi user</td></tr>
+            <tr><td>Trường hợp đánh giá</td><td class="wrap-cell">1.890 cặp (user, nhóm) có ít nhất 3 bài bị che</td></tr>
+            <tr><td>Ứng viên mỗi lượt</td><td class="wrap-cell">bài bị che + 1.000 bài chưa nghe</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cách đặt mục tiêu</th><th class="num">Recall@10</th><th class="num">NDCG@10</th><th class="num">Recall@20</th><th class="num">NDCG@20</th></tr></thead>
+          <tbody>
+            <tr><td>Tọa độ tự đặt</td><td class="num">0,0365</td><td class="num">0,0280</td><td class="num">0,0622</td><td class="num">0,0382</td></tr>
+            <tr><td>Tâm học được</td><td class="num">0,0315</td><td class="num">0,0239</td><td class="num">0,0635</td><td class="num">0,0368</td></tr>
+            <tr class="best"><td>Tâm cá nhân</td><td class="num">0,0390</td><td class="num">0,0292</td><td class="num">0,0701</td><td class="num">0,0417</td></tr>
+          </tbody>
+          <caption>Cá nhân hóa là cách duy nhất tốt hơn baseline ở cả bốn chỉ số: Recall@20 +12,6%, NDCG@20 +9,2%.</caption>
+        </table>
+      </div>
+
+      <div class="callout bad">
+        <span class="c-label">Kết quả không thuận chiều, cần nói rõ khi bảo vệ</span>
+        <p>Riêng tâm học được <strong>chưa chắc</strong> tốt hơn tọa độ tự đặt: hơn ở Recall@20 (+2,0%) nhưng
+        thua ở Recall@10 (−13,7%) và NDCG@20 (−3,7%). Nhìn theo từng nhóm mới thấy lý do.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nhóm</th><th class="num">Tự đặt</th><th class="num">Học được</th><th class="num">Cá nhân</th><th>Nhận xét</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip c-buon">Buồn</span></td><td class="num">0,0011</td><td class="num">0,0603</td><td class="num">0,0514</td><td class="wrap-cell">tọa độ tự đặt gần như vô dụng, tâm học được tăng 55 lần</td></tr>
+            <tr><td><span class="chip c-vui">Vui</span></td><td class="num">0,1932</td><td class="num">0,1380</td><td class="num">0,1575</td><td class="wrap-cell">điểm tự đặt ở góc cực đoan nên kéo đúng bài cực đoan lên</td></tr>
+            <tr><td><span class="chip c-nangdong">Năng động</span></td><td class="num">0,1055</td><td class="num">0,0558</td><td class="num">0,0768</td><td class="wrap-cell">cá nhân hóa bù lại được một phần</td></tr>
+            <tr><td><span class="chip c-thugian">Thư giãn</span></td><td class="num">0,0431</td><td class="num">0,0613</td><td class="num">0,0626</td><td class="wrap-cell">cá nhân hóa tốt nhất</td></tr>
+            <tr><td><span class="chip c-cangthang">Căng thẳng</span></td><td class="num">0,0446</td><td class="num">0,0495</td><td class="num">0,0567</td><td class="wrap-cell">cá nhân hóa tốt nhất</td></tr>
+          </tbody>
+          <caption>Chỉ số là Recall@20. Tâm học được bị co về giữa nên xếp hạng các bài trung tính lên cao,
+          trong khi thành phần <code>prox</code> của công thức chấm điểm lại ưu tiên bài gần điểm mục tiêu.</caption>
+        </table>
+      </div>
+
+      <figure>
+        <img src="figures/mood_eval.png" alt="Hai biểu đồ cột so sánh ba cách đặt mục tiêu tâm trạng, tổng thể và theo từng nhóm">
+        <figcaption>Trái: trung bình trên 1.890 trường hợp. Phải: Recall@20 tách theo từng nhóm tâm trạng.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================== T7 ===================== -->
+    <section id="t7">
+      <div class="sec-head"><span class="tag-id">T7</span><h2 class="sec-title">Hành trình cảm xúc</h2></div>
+      <p class="sec-sub">Phần tùy chọn: playlist chuyển dần từ tâm trạng hiện tại sang tâm trạng mong muốn.</p>
+
+      <p>Đoạn thẳng nối tâm nhóm Buồn (0,310; 0,589) tới tâm nhóm Vui (0,653; 0,643) được chia thành 8 điểm.
+      Mỗi điểm chọn bài có <code>mood_score</code> cao nhất chưa được chọn, trên toàn bộ 50.683 bài.</p>
+
+      <div class="steps">
+        <div class="step"><span class="s-n">1</span><span class="s-track">Earwig Town — <em>Chairlift</em></span><span class="s-val">0,321</span><span class="s-mood"><span class="chip c-buon">Buồn</span></span></div>
+        <div class="step"><span class="s-n">2</span><span class="s-track">Batcat — <em>Mogwai</em></span><span class="s-val">0,355</span><span class="s-mood"><span class="chip c-buon">Buồn</span></span></div>
+        <div class="step"><span class="s-n">3</span><span class="s-track">Just Another — <em>Pete Yorn</em></span><span class="s-val">0,413</span><span class="s-mood"><span class="chip c-thugian">Thư giãn</span></span></div>
+        <div class="step"><span class="s-n">4</span><span class="s-track">Sweet Lullaby — <em>Deep Forest</em></span><span class="s-val">0,461</span><span class="s-mood"><span class="chip c-thugian">Thư giãn</span></span></div>
+        <div class="step"><span class="s-n">5</span><span class="s-track">Light My Fire (Live) — <em>Massive Attack</em></span><span class="s-val">0,502</span><span class="s-mood"><span class="chip c-vui">Vui</span></span></div>
+        <div class="step"><span class="s-n">6</span><span class="s-track">Ring The Alarm — <em>Tenor Saw</em></span><span class="s-val">0,554</span><span class="s-mood"><span class="chip c-vui">Vui</span></span></div>
+        <div class="step"><span class="s-n">7</span><span class="s-track">Pro Lover — <em>Usher</em></span><span class="s-val">0,610</span><span class="s-mood"><span class="chip c-vui">Vui</span></span></div>
+        <div class="step"><span class="s-n">8</span><span class="s-track">Love Me Down — <em>Britney Spears</em></span><span class="s-val">0,658</span><span class="s-mood"><span class="chip c-vui">Vui</span></span></div>
+      </div>
+      <p>Cột số là valence của bài được chọn: tăng dần từ 0,321 lên 0,658, nhóm chuyển
+      Buồn → Thư giãn → Vui mà không nhảy cóc. Mỗi bài cách điểm mục tiêu dưới 0,02 trên cả hai trục.</p>
+
+      <figure>
+        <img src="figures/mood_journey.png" alt="Đường đi tám bước từ nhóm Buồn tới nhóm Vui trên mặt phẳng valence-energy">
+        <figcaption>Nét đứt là đường mục tiêu, chấm đỏ là bài thực sự được chọn ở mỗi bước.</figcaption>
+      </figure>
+
+      <p>Tính năng này cần một không gian tâm trạng liên tục và một hàm chấm điểm liên tục, nên cách làm cũ
+      là lọc bài theo nhãn có sẵn không thể làm được. Hạn chế: đường đi là đoạn thẳng, với cặp nhóm xa nhau
+      thì các bước giữa có thể rơi vào vùng thưa bài; và nó mới chỉ chấm theo tâm trạng, chưa ghép độ hợp gu.</p>
+    </section>
+
+    <!-- ===================== T8 ===================== -->
+    <section id="t8">
+      <div class="sec-head"><span class="tag-id">T8</span><h2 class="sec-title">Tổng kết</h2></div>
+      <p class="sec-sub">Bốn câu hỏi kiểm chứng đặt ra từ đầu và câu trả lời bằng số liệu.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h4>1. Valence và energy có tách được nhóm không?</h4>
+          <p>Có, nhưng valence là đặc trưng tách nhóm <strong>yếu nhất</strong> trong năm đặc trưng được kiểm định
+          (H = 4.819 so với acousticness 13.660).</p>
+        </div>
+        <div class="card">
+          <h4>2. Thêm đặc trưng cải thiện bao nhiêu?</h4>
+          <p>macro-F1 từ 0,441 lên 0,516 với cùng một thuật toán (<strong>+16,9%</strong>), lên 0,571 với LightGBM (+29,4%).</p>
+        </div>
+        <div class="card">
+          <h4>3. So với baseline tọa độ tự đặt?</h4>
+          <p>macro-F1 từ 0,363 lên 0,571, hơn <strong>57,4%</strong>; accuracy 0,440 → 0,677.</p>
+        </div>
+        <div class="card">
+          <h4>4. Cá nhân hóa có cải thiện không?</h4>
+          <p>Có, trên lịch sử nghe thật: Recall@20 <strong>+12,6%</strong>, NDCG@20 +9,2%, và tốt hơn baseline ở cả bốn chỉ số.</p>
+        </div>
+      </div>
+
+      <h3>File bàn giao</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Cho ai</th><th>Nội dung</th></tr></thead>
+          <tbody>
+            <tr><td><code>track_mood.parquet</code></td><td>Mô hình gu</td><td class="wrap-cell">hồ sơ tâm trạng 50.683 bài: xác suất 5 nhóm, nhóm dự đoán, độ tự tin, nguồn nhãn</td></tr>
+            <tr><td><code>mood_centroids.json</code></td><td>Mô hình gu</td><td class="wrap-cell">tâm và hiệp phương sai 5 nhóm — vị trí nút chọn nhanh và thanh kéo</td></tr>
+            <tr><td><code>src/mood/api.py</code></td><td>Mô hình gu</td><td class="wrap-cell">5 hàm công khai, không còn hàm nào chưa cài</td></tr>
+            <tr><td><code>track_mood_labels.parquet</code></td><td>Dữ liệu &amp; đánh giá</td><td class="wrap-cell">nhãn từ tag kèm trạng thái nhãn, để đánh giá có điều kiện tâm trạng</td></tr>
+            <tr><td><code>tag_audit.csv</code>, <code>suspect_tracks.csv</code></td><td>Dữ liệu &amp; đánh giá</td><td class="wrap-cell">kiểm kê 100 tag và 5.263 bài nghi ghép nhầm phiên bản</td></tr>
+            <tr><td><code>models/mood_classifier.joblib</code></td><td>Nội bộ</td><td class="wrap-cell">LightGBM đã huấn luyện kèm danh sách cột đặc trưng</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== Hạn chế ===================== -->
+    <!-- ===================== A2 ===================== -->
+    <section id="a2">
+      <div class="sec-head"><span class="tag-id">A2</span><h2 class="sec-title">Ghép với mô hình gu: bốn tập ứng viên</h2></div>
+      <p class="sec-sub">Khung đánh giá lấy từ Hausberger, Jósár &amp; Schedl (NLP4MusA 2026). Trả lời câu hỏi hội đồng chắc chắn hỏi: mô hình tâm trạng có thêm được gì so với mô hình gu, hay chỉ đang nói lại điều mô hình gu đã biết?</p>
+
+      <div class="callout">
+        <span class="c-label">Vấn đề của cách đo cũ</span>
+        <p>Recall@20 ở T6 trộn hai thứ vào một con số: điểm cao có thể là nhờ mô hình gu đoán đúng, cũng có thể nhờ mô hình tâm trạng. Không tách ra được thì không chứng minh được mô-đun nào đang làm việc.</p>
+      </div>
+
+      <h3>Thiết kế</h3>
+      <p>Với mỗi cặp (người dùng, nhóm tâm trạng), kho nhạc chia thành <b>bốn tập không giao nhau</b>; lấy N bài mỗi tập, trộn lẫn thành 4N ứng viên, rồi đo NDCG@N <b>riêng cho từng tập</b>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tập</th><th>Nghĩa</th><th>Nguồn bài</th></tr></thead>
+          <tbody>
+            <tr><td><code>set1</code></td><td class="wrap-cell">đúng gu <b>và</b> đúng tâm trạng</td><td class="wrap-cell">bài bị che, <code>mood_pred == m</code></td></tr>
+            <tr><td><code>set2</code></td><td class="wrap-cell">đúng gu, sai tâm trạng</td><td class="wrap-cell">bài bị che, <code>mood_pred != m</code></td></tr>
+            <tr><td><code>set3</code></td><td class="wrap-cell">đúng tâm trạng, chưa từng nghe</td><td class="wrap-cell">kho nhạc, <code>mood_pred == m</code></td></tr>
+            <tr><td><code>set4</code></td><td class="wrap-cell">sai cả hai</td><td class="wrap-cell">kho nhạc, <code>mood_pred != m</code></td></tr>
+          </tbody>
+          <caption>Khác bài gốc một chỗ quan trọng: “đúng gu” ở đây là <b>phần bị che</b>, không phải lịch sử đã biết — nếu dùng lịch sử đã biết thì ALS đã học chính các bài đó nên set1/set2 bị rò rỉ.</caption>
+        </table>
+      </div>
+
+      <p>Mô hình gu là <b>ALS của TV2, dùng nguyên không sửa</b>: 50.000 user (20.000 test + 30.000 khác), 1.065.240 tương tác huấn luyện, và <b>145.227 tương tác bị che đã bị loại</b> khỏi dữ liệu huấn luyện.</p>
+
+      <h3>Kết quả — N = 5 bài mỗi tập, 4.096 cặp người dùng–nhóm</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bộ xếp hạng</th><th class="num">set1 gu+tâm trạng</th><th class="num">set2 chỉ gu</th><th class="num">set3 chỉ tâm trạng</th><th class="num">set4 không gì</th></tr></thead>
+          <tbody>
+            <tr><td>ngẫu nhiên</td><td class="num">0,2465</td><td class="num">0,2503</td><td class="num">0,2553</td><td class="num">0,2480</td></tr>
+            <tr><td>phổ biến (Pop)</td><td class="num">0,4263</td><td class="num">0,4563</td><td class="num">0,0600</td><td class="num">0,0574</td></tr>
+            <tr><td>chỉ gu (ALS)</td><td class="num">0,4961</td><td class="num">0,4691</td><td class="num">0,0202</td><td class="num">0,0146</td></tr>
+            <tr><td>chỉ tâm trạng</td><td class="num">0,4377</td><td class="num">0,0863</td><td class="num">0,4047</td><td class="num">0,0713</td></tr>
+            <tr><td>ghép 0,3 gu</td><td class="num">0,5550</td><td class="num">0,1297</td><td class="num">0,2710</td><td class="num">0,0443</td></tr>
+            <tr class="best"><td>ghép 0,5 gu</td><td class="num">0,6146</td><td class="num">0,2387</td><td class="num">0,1274</td><td class="num">0,0193</td></tr>
+            <tr><td>ghép 0,7 gu</td><td class="num">0,5784</td><td class="num">0,3635</td><td class="num">0,0476</td><td class="num">0,0105</td></tr>
+          </tbody>
+          <caption>NDCG@5. Dòng <code>ngẫu nhiên</code> cho ≈ 0,25 ở cả bốn tập, đúng kỳ vọng với 5/20 ứng viên liên quan — phép đo không lệch.</caption>
+        </table>
+      </div>
+
+      <figure>
+        <img src="figures/four_sets_n5.png" alt="NDCG@5 của 7 bộ xếp hạng trên bốn tập ứng viên">
+        <figcaption>Mỗi bộ xếp hạng bốn thanh. Nhìn hai thanh đầu của mỗi hàng là thấy ngay bộ nào phân biệt được tâm trạng: chỉ-gu có hai thanh gần bằng nhau, ghép 0,5 thì thanh set1 vọt lên.</figcaption>
+      </figure>
+
+      <h3>Bốn điều đọc được</h3>
+      <div class="cards">
+        <div class="card"><h4>Mô hình gu không phân biệt được tâm trạng</h4><p>Chênh lệch set1 − set2 của chỉ-gu chỉ <b>+0,0270</b>; của Pop còn âm (−0,0300). Cả hai nâng bài người dùng thích, bất kể tâm trạng.</p></div>
+        <div class="card"><h4>Mô hình tâm trạng không phân biệt được người dùng</h4><p>0,4377 ở set1 và 0,4047 ở set3 — gần bằng nhau, tức là nó không biết bài nào thuộc gu ai.</p></div>
+        <div class="card"><h4>Hai mô-đun không trùng lặp</h4><p>Mỗi bên mạnh đúng chỗ bên kia yếu. Đây là bằng chứng số cho thấy mô-đun tâm trạng đáng có mặt.</p></div>
+        <div class="card"><h4>Ghép lại thắng cả hai, trọng số 0,5 tốt nhất</h4><p>set1 đạt <b>0,6146</b>, hơn chỉ-gu <b>+23,9%</b>. Mức phân biệt tâm trạng tăng từ +0,027 lên <b>+0,376</b>.</p></div>
+      </div>
+
+      <h3>Độ bền theo cỡ tập</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>N bài/tập</th><th class="num">số cặp</th><th class="num">set1 chỉ gu</th><th class="num">set1 ghép 0,5</th><th class="num">mức tăng</th><th class="num">phân biệt tâm trạng</th></tr></thead>
+          <tbody>
+            <tr><td>3</td><td class="num">12.697</td><td class="num">0,4907</td><td class="num">0,6035</td><td class="num">+23,0%</td><td class="num">+0,3518</td></tr>
+            <tr><td>5</td><td class="num">4.096</td><td class="num">0,4961</td><td class="num">0,6146</td><td class="num">+23,9%</td><td class="num">+0,3759</td></tr>
+            <tr class="best"><td>10 (đúng cỡ bài gốc)</td><td class="num">584</td><td class="num">0,5040</td><td class="num">0,6337</td><td class="num">+25,7%</td><td class="num">+0,4198</td></tr>
+          </tbody>
+          <caption>Kết luận không phụ thuộc cỡ tập; ở N = 10 — đúng thiết kế của bài gốc — hiệu ứng mạnh nhất.</caption>
+        </table>
+      </div>
+
+      <div class="callout warn">
+        <span class="c-label">Phải nói rõ khi báo cáo</span>
+        <p>Nhãn <code>mood_pred</code> dùng để định nghĩa set1 và set3 do <b>chính mô-đun này</b> sinh ra. Nên A2 đo mức <b>nhất quán giữa hồ sơ tâm trạng và hành vi nghe thật</b>, chứ không chứng minh người dùng cảm nhận đúng nhóm đó. Muốn kết luận mạnh hơn cần nhãn độc lập hoặc khảo sát mù — đúng như mục 5 và 6 trong giao thức đánh giá của TV2.</p>
+      </div>
+    </section>
+
+    <!-- ===================== A1 ===================== -->
+    <section id="a1">
+      <div class="sec-head"><span class="tag-id">A1</span><h2 class="sec-title">Thử thay bảng trọng số tag bằng embedding</h2></div>
+      <p class="sec-sub">Nhóm Linz gán 32 ý định nghe mà không có nhãn nào: nhúng tên playlist và tên ý định, so cosine, rồi chuẩn hóa z-score theo từng ý định. Thử đúng cách đó cho bảng trọng số tag — vốn là điểm dễ bị chất vấn nhất của T2.</p>
+
+      <h3>Vì sao đáng thử</h3>
+      <p>Bảng trọng số 53 tag ở T2 do nhóm <b>chỉnh tay</b>, và đã phải can thiệp thủ công một lần vì nhóm <span class="chip c-buon">Buồn</span> chỉ còn 60 bài. Bước <b>chuẩn hóa z-score theo từng nhóm</b> của bài Linz đúng là thứ chữa bệnh đó một cách tự động: nó xóa độ lệch thang đo giữa các nhóm nên nhóm ít tín hiệu không bị nhóm mạnh át.</p>
+
+      <h3>Chọn mô hình nhúng, và một thước đo khách quan</h3>
+      <p>Mô hình đúng của bài gốc (<code>google/embeddinggemma-300m</code>) <b>bị khóa trên HuggingFace</b>. Ba mô hình mở được chấm bằng một thước không phụ thuộc bảng tay: mỗi tag có một vị trí (valence, energy) trung bình thật trong dữ liệu, nhóm “đúng” là tâm học được gần nhất.</p>
+      <div class="bars">
+        <div class="bar-row"><span>all-MiniLM-L6-v2</span><div class="bar-track"><div class="bar-fill muted" style="width:39%"></div></div><span class="bar-val">32,4%</span></div>
+        <div class="bar-row"><span>all-mpnet-base-v2</span><div class="bar-track"><div class="bar-fill muted" style="width:42%"></div></div><span class="bar-val">35,1%</span></div>
+        <div class="bar-row"><span>bge-base-en-v1.5</span><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><span class="bar-val">50,0%</span></div>
+        <div class="bar-row"><span><b>bảng tay (T2)</b></span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-val">83,0%</span></div>
+      </div>
+
+      <h3>Kết quả trên toàn bộ 50.683 bài</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cách gán nhãn</th><th class="num">số tag</th><th class="num">bài có nhãn</th><th class="num">khớp vị trí âm thanh</th><th class="num">trùng nhãn với bảng tay</th><th class="num">macro-F1</th></tr></thead>
+          <tbody>
+            <tr class="best"><td>bảng tay (T2)</td><td class="num">53</td><td class="num">26.752</td><td class="num">83,0%</td><td class="num">—</td><td class="num">0,5711</td></tr>
+            <tr><td>embedding argmax</td><td class="num">44</td><td class="num">28.999</td><td class="num">50,0%</td><td class="num">74,8%</td><td class="num">0,5327</td></tr>
+            <tr><td>embedding soft</td><td class="num">44</td><td class="num">11.555</td><td class="num">50,0%</td><td class="num">86,2%</td><td class="num">không chạy được</td></tr>
+            <tr><td class="wrap-cell">bảng tay + embedding cho tag chưa phủ</td><td class="num">65</td><td class="num">30.362</td><td class="num">72,3%</td><td class="num">98,9%</td><td class="num">0,5562</td></tr>
+          </tbody>
+          <caption>Bản “soft” trải trọng số ra nhiều nhóm làm 25.822 bài thành mâu thuẫn và nhóm Thư giãn còn 0 bài, không huấn luyện nổi bộ phân loại.</caption>
+        </table>
+      </div>
+
+      <div class="callout bad">
+        <span class="c-label">Kết luận: giữ bảng trọng số tay</span>
+        <p>Embedding <b>tăng độ phủ</b> (+3.610 bài có nhãn) nhưng <b>giảm chất lượng nhãn</b> (83,0% → 72,3%) và <b>giảm macro-F1</b> (0,5711 → 0,5562). Không biến thể nào thắng.</p>
+      </div>
+
+      <h3>Vì sao thất bại — đọc được ngay từ bảng z-score</h3>
+      <p>Bài gốc nhúng <b>tên playlist</b>: nhiều từ, mang nghĩa mô tả như “chill vibes”. Ta chỉ có <b>tên thể loại trần</b>, và mô hình văn bản đọc theo mặt chữ:</p>
+      <ul>
+        <li>nhóm <span class="chip c-buon">Buồn</span> khớp nhất với <code>melodic_death_metal</code> — chữ “death” đọc ra bi thương, “melodic” đọc ra dễ nghe, trong khi âm thanh thật của tag này là valence 0,27 / energy 0,90;</li>
+        <li>nhóm <span class="chip c-vui">Vui</span> khớp nhất với <code>mellow</code> (val 0,36 / ene 0,44) — nhầm hẳn sang nhóm thư giãn;</li>
+        <li>phần làm đúng lại là chỗ tên gọi trùng nghĩa âm nhạc: <span class="chip c-thugian">Thư giãn</span> ← mellow, chill, downtempo, ambient; <span class="chip c-cangthang">Căng thẳng</span> ← grindcore, hardcore, dark_ambient.</li>
+      </ul>
+
+      <div class="callout good">
+        <span class="c-label">Giá trị còn lại của A1</span>
+        <p>Nó biến “bảng trọng số do nhóm tự đặt” từ một điểm yếu bị chất vấn thành một <b>lựa chọn đã kiểm chứng</b>: nhóm đã thử cách tự động, đo bằng hai thước độc lập, và có số để nói vì sao cách tay tốt hơn trên dữ liệu này.</p>
+      </div>
+    </section>
+
+    <!-- ===================== A3 ===================== -->
+    <section id="a3">
+      <div class="sec-head"><span class="tag-id">A3</span><h2 class="sec-title">“Nói ngầm” so với “nói tỏ”</h2></div>
+      <p class="sec-sub">Phát hiện bất ngờ của bài Linz: đưa 3 bài người dùng từng nghe <b>tốt hơn</b> gọi tên ý định (NDCG 0,37 so với 0,29). Thanh kéo của nhóm chính là cách “nói tỏ” — nên câu hỏi là phát hiện đó có chuyển sang hệ này không.</p>
+
+      <h3>Ba kiểu hỏi của bài gốc khớp đúng ba cách đặt mục tiêu ở T6</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bài gốc</th><th>Mục tiêu tương ứng</th><th>Tình trạng</th></tr></thead>
+          <tbody>
+            <tr><td>tỏ — chỉ tên ý định</td><td class="wrap-cell"><code>manual</code>, <code>learned</code>: chỉ dùng tọa độ nhóm</td><td>đã có từ T6</td></tr>
+            <tr><td>cả hai — tên + ví dụ</td><td class="wrap-cell"><code>personal</code>: tọa độ nhóm <b>+</b> lịch sử nghe</td><td>đã có từ T6</td></tr>
+            <tr><td><b>ngầm — chỉ bài ví dụ</b></td><td class="wrap-cell"><code>seed3</code>: tâm của đúng N bài, <b>không</b> co về tâm chung</td><td>thêm mới ở A3</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Kết quả — 1.269 người dùng test, 1.890 cặp người dùng–nhóm</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mục tiêu</th><th class="num">Recall@10</th><th class="num">NDCG@10</th><th class="num">Recall@20</th><th class="num">NDCG@20</th><th class="num">so với tọa độ tự đặt</th></tr></thead>
+          <tbody>
+            <tr><td>tọa độ tự đặt</td><td class="num">0,0365</td><td class="num">0,0280</td><td class="num">0,0622</td><td class="num">0,0382</td><td class="num">—</td></tr>
+            <tr><td>tâm học được</td><td class="num">0,0315</td><td class="num">0,0239</td><td class="num">0,0635</td><td class="num">0,0368</td><td class="num">+2,0%</td></tr>
+            <tr class="best"><td>tâm cá nhân</td><td class="num">0,0390</td><td class="num">0,0292</td><td class="num">0,0701</td><td class="num">0,0417</td><td class="num">+12,6%</td></tr>
+            <tr><td>3 bài ví dụ</td><td class="num">0,0348</td><td class="num">0,0255</td><td class="num">0,0623</td><td class="num">0,0367</td><td class="num">+0,1%</td></tr>
+            <tr><td>5 bài ví dụ</td><td class="num">0,0387</td><td class="num">0,0285</td><td class="num">0,0687</td><td class="num">0,0407</td><td class="num">+10,4%</td></tr>
+            <tr><td>10 bài ví dụ</td><td class="num">0,0340</td><td class="num">0,0258</td><td class="num">0,0659</td><td class="num">0,0386</td><td class="num">+5,9%</td></tr>
+          </tbody>
+          <caption>Ba mục tiêu đầu tái lập đúng nguyên văn số đã công bố ở T6: cách chọn bài ví dụ gieo hạt riêng theo người dùng nên không ăn vào luồng ngẫu nhiên của phép đánh giá.</caption>
+        </table>
+      </div>
+
+      <div class="callout bad">
+        <span class="c-label">Kết luận: phát hiện của bài gốc không chuyển sang hệ này</span>
+        <p>Với đúng 3 bài như bài gốc, cách “ngầm” <b>ngang bằng</b> tọa độ tự đặt (+0,1%) và thua rõ tâm cá nhân. Năm bài thì tốt hơn (+10,4%) nhưng vẫn không vượt được. Mười bài lại tụt, vì tỷ lệ phải lui về tâm chung tăng vọt: <b>14,4% → 32,1% → 69,2%</b> khi tăng từ 3 lên 5 rồi 10 bài. Trung vị số bài thuộc một nhóm trong phần thấy được chỉ là <b>7 bài</b>.</p>
+      </div>
+
+      <h3>Vì sao</h3>
+      <p>LLM đọc được <b>ngữ nghĩa</b> từ tên nghệ sĩ và tên bài — thể loại, thời kỳ, ngôn ngữ, phong cách sản xuất — nên 3 bài ví dụ mang rất nhiều thông tin. Một điểm (valence, energy) lấy trung bình 3 bài thì chỉ còn hai con số và nhiễu rất lớn. Bước co về tâm chung của <code>personal</code> chính là phần chống nhiễu đó; bỏ nó đi là mất.</p>
+
+      <div class="callout">
+        <span class="c-label">Hệ quả thiết kế</span>
+        <p>Giữ thanh kéo, và cách tốt nhất vẫn là <code>personal</code> — tọa độ nhóm cộng lịch sử nghe, tức đúng kiểu “cả hai” của bài gốc. Nếu làm giao diện chọn bài hạt giống thì nên lấy <b>5 bài trở lên và vẫn co về tâm chung</b>, không thay thế thanh kéo.</p>
+      </div>
+    </section>
+
+    <!-- ===================== Phần III: dữ liệu chính thức ===================== -->
+    <section id="phan3">
+      <div class="sec-head"><span class="tag-id">III</span><h2 class="sec-title">Chạy lại trên bộ dữ liệu chính thức của nhóm</h2></div>
+      <p class="sec-sub">TV1 bàn giao bộ chia train/test chung (lọc 10-core lặp, ~20% tương tác mỗi người làm test, thêm cột <code>engagement_score</code>). Hai việc phụ thuộc lịch sử nghe — A2 và A3 — phải chạy lại; A1 chỉ dùng tag và đặc trưng âm thanh nên về nguyên tắc không đổi, vẫn chạy lại để xác nhận bằng số.</p>
+
+      <h3>Ba thứ đã đổi</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Phần I–II (bộ chia tự làm)</th><th>Phần III (bộ chia chính thức)</th></tr></thead>
+          <tbody>
+            <tr><td>Lọc</td><td>10/10 một lượt</td><td><b>10-core lặp</b> đến khi ổn định</td></tr>
+            <tr><td>Kho nhạc</td><td class="num">24.286 bài</td><td class="num"><b>22.557 bài</b></td></tr>
+            <tr><td>Phần bị che</td><td>tự gieo hạt, 30% mỗi người</td><td>tập test chính thức, ~20% (trung vị 4 bài)</td></tr>
+            <tr><td>Mô hình gu</td><td class="num">50.000 × 23.348</td><td class="num"><b>289.572 × 22.557</b></td></tr>
+            <tr><td>Rò rỉ · cold-item</td><td class="num">0 · 222</td><td class="num"><b>0 · 0</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>A2 — kết luận không đổi</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">N</th><th>bộ chia</th><th class="num">số cặp</th><th class="num">set1 chỉ gu</th><th class="num">set1 ghép 0,5</th><th class="num">mức tăng</th></tr></thead>
+          <tbody>
+            <tr><td class="num">3</td><td>cũ</td><td class="num">12.697</td><td class="num">0,4907</td><td class="num">0,6035</td><td class="num">+23,0%</td></tr>
+            <tr class="best"><td class="num">3</td><td><b>chính thức</b></td><td class="num">18.001</td><td class="num">0,4923</td><td class="num">0,6106</td><td class="num">+24,0%</td></tr>
+            <tr><td class="num">5</td><td>cũ</td><td class="num">4.096</td><td class="num">0,4961</td><td class="num">0,6146</td><td class="num">+23,9%</td></tr>
+            <tr class="best"><td class="num">5</td><td><b>chính thức</b></td><td class="num">4.515</td><td class="num">0,5048</td><td class="num">0,6228</td><td class="num">+23,4%</td></tr>
+            <tr><td class="num">10</td><td>cũ</td><td class="num">584</td><td class="num">0,5040</td><td class="num">0,6337</td><td class="num">+25,7%</td></tr>
+            <tr class="best"><td class="num">10</td><td><b>chính thức</b></td><td class="num">449</td><td class="num">0,5103</td><td class="num">0,6372</td><td class="num">+24,9%</td></tr>
+          </tbody>
+          <caption>Cả bốn phát hiện của A2 giữ nguyên: phép đo không lệch (<code>random</code> ≈ 0,25 ở cả bốn tập), mô hình gu gần như mù tâm trạng (+0,0217), mô hình tâm trạng mù người dùng, ghép 0,5 thắng cả 0,3 và 0,7.</caption>
+        </table>
+      </div>
+
+      <figure>
+        <img src="figures/four_sets_n3_official.png" alt="Biểu đồ cột ngang NDCG@3 của bảy bộ xếp hạng trên bốn tập ứng viên, 18.001 cặp người dùng-nhóm, bộ chia chính thức">
+        <figcaption>A2 trên bộ chia chính thức, N = 3 bài mỗi tập. Cột xanh (set1 — đúng gu và đúng tâm trạng) cao nhất ở hàng “ghép 0,5 gu”.</figcaption>
+      </figure>
+
+      <h3>Phát hiện mới — cột <code>engagement_score</code> của TV1 làm kết quả tốt hơn</h3>
+      <p>Điểm gắn bó gộp bốn tín hiệu (playcount log, percentile trong lịch sử người dùng, playcount tương đối so với trung bình bài, bằng chứng nghệ sĩ). Đưa vào ALS bằng cách nhân thang 60 rồi dùng đúng hàm tin cậy của TV2 — không sửa code TV2.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Trọng số tin cậy cho ALS (N=3, 18.001 cặp)</th><th class="num">set1 chỉ gu</th><th class="num">set1 ghép 0,5</th><th class="num">mức tăng</th><th class="num">phân biệt tâm trạng</th></tr></thead>
+          <tbody>
+            <tr><td><code>playcount</code></td><td class="num">0,4923</td><td class="num">0,6106</td><td class="num">+24,0%</td><td class="num">+0,3594</td></tr>
+            <tr class="best"><td><code>engagement_score</code></td><td class="num">0,4987</td><td class="num">0,6505</td><td class="num">+30,4%</td><td class="num">+0,4133</td></tr>
+          </tbody>
+          <caption>Tương quan giữa <code>engagement_score</code> và <code>log1p(playcount)</code> là 0,872 — ba tín hiệu còn lại chỉ đóng góp phần nhỏ, nhưng phần nhỏ đó đủ nâng set1 thêm +0,0399.</caption>
+        </table>
+      </div>
+      <div class="callout good">
+        <span class="c-label">Đề xuất gửi TV2</span>
+        <p>Đưa <code>engagement_score</code> vào grid-search của mô hình gu. Đây mới là quan sát ở một cấu hình, chưa phải kết luận đã tối ưu.</p>
+      </div>
+
+      <h3>A1 — kết luận không đổi trên catalogue 22.557 bài</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cách gán nhãn</th><th class="num">bài có nhãn</th><th class="num">khớp vị trí âm thanh</th><th class="num">macro-F1</th></tr></thead>
+          <tbody>
+            <tr class="best"><td><b>bảng tay (T2)</b></td><td class="num">12.245</td><td class="num">84,9%</td><td class="num">0,5656</td></tr>
+            <tr><td>embedding argmax</td><td class="num">13.113</td><td class="num">52,3%</td><td class="num">0,5176</td></tr>
+            <tr><td>embedding soft</td><td class="num">5.166</td><td class="num">52,3%</td><td class="num">không huấn luyện được</td></tr>
+            <tr><td>bảng tay + embedding cho tag chưa phủ</td><td class="num">13.694</td><td class="num">73,8%</td><td class="num">0,5541</td></tr>
+          </tbody>
+          <caption>Thứ hạng và khoảng cách y nguyên so với Phần II (83,0% / 0,5711 cho bảng tay). Giữ bảng trọng số tay.</caption>
+        </table>
+      </div>
+
+      <h3>A3 — con số đổi, kết luận mạnh hơn</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mục tiêu</th><th class="num">Recall@10</th><th class="num">NDCG@10</th><th class="num">Recall@20</th><th class="num">NDCG@20</th><th class="num">so với tọa độ tự đặt</th></tr></thead>
+          <tbody>
+            <tr><td>tọa độ tự đặt</td><td class="num">0,0397</td><td class="num">0,0284</td><td class="num">0,0692</td><td class="num">0,0399</td><td class="num">—</td></tr>
+            <tr><td>tâm học được</td><td class="num">0,0357</td><td class="num">0,0257</td><td class="num">0,0659</td><td class="num">0,0376</td><td class="num"><span class="k-down">−4,7%</span></td></tr>
+            <tr class="best"><td>tâm cá nhân</td><td class="num">0,0396</td><td class="num">0,0290</td><td class="num">0,0711</td><td class="num">0,0413</td><td class="num"><span class="k-up">+2,7%</span></td></tr>
+            <tr><td>3 bài ví dụ</td><td class="num">0,0330</td><td class="num">0,0229</td><td class="num">0,0630</td><td class="num">0,0347</td><td class="num"><span class="k-down">−9,0%</span></td></tr>
+          </tbody>
+          <caption>10.094 cặp người dùng–nhóm từ 7.735 người — gấp 5,3 lần số cặp của Phần II.</caption>
+        </table>
+      </div>
+
+      <p>Mức lợi của cá nhân hóa tụt từ +12,6% xuống +2,7%. Ba thứ đổi cùng lúc, nên chạy thêm hai cấu hình trung gian để tách nguyên nhân:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cấu hình</th><th>bộ chia</th><th class="num">kho nhạc</th><th class="num">số cặp</th><th class="num">tâm cá nhân</th><th class="num">3 bài ví dụ</th></tr></thead>
+          <tbody>
+            <tr><td>1 — đã báo cáo ở T6</td><td>cũ</td><td class="num">50.683</td><td class="num">1.890</td><td class="num">+12,6%</td><td class="num">+0,1%</td></tr>
+            <tr><td>2 — đối chứng cỡ mẫu</td><td>cũ</td><td class="num">50.683</td><td class="num">18.029</td><td class="num">+10,1%</td><td class="num">−0,0%</td></tr>
+            <tr><td>3 — đối chứng kho nhạc</td><td><b>chính thức</b></td><td class="num">50.683</td><td class="num">10.094</td><td class="num">+8,1%</td><td class="num">−5,0%</td></tr>
+            <tr class="best"><td>4 — dữ liệu chính thức</td><td><b>chính thức</b></td><td class="num"><b>22.557</b></td><td class="num">10.094</td><td class="num">+2,7%</td><td class="num">−9,0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="bars">
+        <div class="bar-row"><span>cỡ mẫu 1.890 → 18.029 cặp</span><span class="bar-track"><span class="bar-fill muted" style="width:25%"></span></span><span class="bar-val">−2,5 đ</span></div>
+        <div class="bar-row"><span>bộ chia 30% → tập test chính thức</span><span class="bar-track"><span class="bar-fill muted" style="width:20%"></span></span><span class="bar-val">−2,0 đ</span></div>
+        <div class="bar-row"><span>kho nhạc 50.683 → 22.557 bài</span><span class="bar-track"><span class="bar-fill" style="width:55%"></span></span><span class="bar-val">−5,4 đ</span></div>
+      </div>
+
+      <p>Phần lớn nhất là <b>kho nhạc hẹp lại</b>. Lọc 10-core bỏ 28.126 bài ít người nghe nhất — đúng chỗ mục tiêu cá nhân hóa phát huy tác dụng. Trong một kho chỉ còn bài tương đối phổ biến, bốn cách đặt mục tiêu lấy ra những bài khá giống nhau nên cá nhân hóa thêm được ít.</p>
+
+      <div class="cards">
+        <div class="card"><h4>A2 giữ nguyên</h4><p>Ghép <code>taste_weight = 0,5</code> hơn chỉ-gu +24,0% / +23,4% / +24,9% ở N = 3 / 5 / 10. Kết luận bền trước thay đổi dữ liệu.</p></div>
+        <div class="card"><h4>A1 giữ nguyên</h4><p>Bảng trọng số tay vẫn thắng embedding ở cả hai thước đo, trên catalogue hẹp hơn.</p></div>
+        <div class="card"><h4>A3 chặt hơn</h4><p>3 bài ví dụ nay kém rõ rệt (−9,0%) ở cả bốn cấu hình. Loại hẳn, không đưa vào <code>api.py</code>.</p></div>
+        <div class="card"><h4>Phải sửa một con số</h4><p>Cá nhân hóa lợi <b>+2,7%</b>, không phải +12,6%. Mọi báo cáo ra ngoài dùng số này.</p></div>
+      </div>
+
+      <div class="callout warn">
+        <span class="c-label">Hai việc cần nhóm chốt</span>
+        <p><b>TV2:</b> đưa <code>engagement_score</code> vào grid-search mô hình gu, rồi xác nhận cấu hình ALS cuối cùng — con số +24,0% sẽ đổi chút nếu tối ưu lại.</p>
+        <p><b>Cả nhóm:</b> mọi chỗ nói về mức lợi của cá nhân hóa trong báo cáo cuối phải dùng +2,7%.</p>
+      </div>
+    </section>
+
+    <section id="hanche">
+      <div class="sec-head"><h2 class="sec-title">Hạn chế cần nói rõ</h2></div>
+      <p class="sec-sub">Những điểm yếu này nằm sẵn trong dữ liệu hoặc trong cách làm, nên trình bày chủ động sẽ tốt hơn là để người khác hỏi.</p>
+
+      <ol class="list">
+        <li><strong>Nhãn là nhãn yếu, không phải nhãn người gán.</strong> Không ai trong bộ dữ liệu nói “bài này vui”;
+        nhãn được suy ra từ tag theo bảng trọng số do nhóm tự đặt.</li>
+        <li><strong>Ba trong năm nhóm không có tag cảm xúc nào.</strong> Vui, Năng động và Căng thẳng được gán nhãn
+        hoàn toàn từ tag thể loại. Đây là giả định mạnh nhất của cả module: <em>thể loại nói lên cảm xúc</em>.</li>
+        <li><strong>Không nhóm nào dùng nhãn luật từ valence/energy.</strong> Phương án này đã bị loại từ đầu vì sẽ tạo
+        vòng lặp logic: sinh nhãn từ valence rồi lại huấn luyện mô hình học từ chính valence.</li>
+        <li><strong>Nhóm Buồn yếu nhất</strong> (F1 0,239), vì nguồn nhãn của nó là nhạc buồn nhưng mạnh
+        (post_rock, emo, doom metal) nên không nằm ở góc “trầm và yên” như trực giác.</li>
+        <li><strong>Mất cân bằng 7,3:1</strong> giữa Căng thẳng và Buồn, nên phải đọc macro-F1 thay vì accuracy.</li>
+        <li><strong>1.367 bài nghi ghép nhầm phiên bản</strong> đã bị loại khỏi huấn luyện; 2.752 bài lệch tag thập niên
+        và 1.614 bài trùng tên chỉ được ghi nhận vì tín hiệu yếu.</li>
+        <li><strong>Đánh giá ở T6 có yếu tố vòng lặp:</strong> “bài bị che thuộc nhóm m” được xác định bằng chính dự đoán
+        của module. Nó đo độ khớp với nhãn của chính mình, không đo được người dùng có thấy đúng tâm trạng hay không —
+        bộ dữ liệu không có nhãn tâm trạng do người gán.</li>
+        <li><strong>Con số ở T6 chỉ đo riêng phần tâm trạng</strong> nên giá trị tuyệt đối thấp và không so sánh trực tiếp
+        được với kết quả chung của hệ thống. Phần ghép thật với mô hình gu nằm ở A2 và Phần III.</li>
+        <li><strong>Số liệu Phần I và Phần II chạy trên bộ chia tự làm</strong> (che 30%, kho 50.683 bài), không phải bộ chia
+        chính thức của nhóm. Khi báo cáo ra ngoài, dùng số ở Phần III.</li>
+      </ol>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="wrap foot-inner">
+    <p>Toàn bộ số liệu trên trang này lấy từ các file do mã nguồn sinh ra:
+    <code>model_comparison.csv</code>, <code>calibration_comparison.csv</code>, <code>mood_eval_summary.csv</code>,
+    <code>permutation_importance.csv</code>, <code>track_mood_labels.parquet</code>, <code>track_mood.parquet</code>,
+    <code>mood_centroids.json</code>. Mọi bước dùng <code>random_state = 42</code> và chạy lại được bằng
+    <code>python -m src.mood.&lt;bước&gt;</code>. Báo cáo chi tiết kèm nhật ký quyết định nằm trong
+    <code>reports/RESULTS.md</code> và <code>docs/decisions.md</code>.</p>
+  </div>
+</footer>
+
+<script>
+// Làm nổi mục đang đọc trên thanh điều hướng
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var sections = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+                      .filter(Boolean);
+  if (!sections.length || !('IntersectionObserver' in window)) return;
+
+  var visible = new Map();
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) visible.set(entry.target.id, entry.intersectionRatio);
+      else visible.delete(entry.target.id);
+    });
+    var best = null, bestRatio = -1;
+    visible.forEach(function (ratio, id) { if (ratio > bestRatio) { bestRatio = ratio; best = id; } });
+    if (!best) return;
+    links.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + best);
+    });
+  }, { rootMargin: '-10% 0px -70% 0px', threshold: [0, 0.25, 0.5, 1] });
+
+  sections.forEach(function (s) { observer.observe(s); });
+})();
+</script>
+
+</body>
+</html>
