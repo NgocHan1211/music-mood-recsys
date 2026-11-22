@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Báo cáo mô hình gu — Hân</title>
+  <style>
+    :root { --ink:#172033; --muted:#5c667a; --paper:#f5f7fb; --card:#fff; --line:#dce2ee; --blue:#3867f2; --violet:#7c3aed; --orange:#f59e0b; --green:#13956c; --red:#d34d5e; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); font:16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--paper); }
+    main { max-width:1120px; margin:auto; padding:32px 22px 64px; } .hero { padding:42px; border-radius:24px; color:#fff; background:radial-gradient(circle at 88% 8%, #8b5cf6 0, transparent 28%), linear-gradient(135deg,#102149,#243d92); box-shadow:0 18px 44px #1720332b; }
+    .eyebrow { margin:0 0 8px; font-size:.8rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.8; } h1 { font-size:clamp(2rem,5vw,3.75rem); line-height:1.06; margin:0; letter-spacing:-.04em; } .hero p:last-child { max-width:720px; margin:20px 0 0; font-size:1.08rem; opacity:.93; }
+    h2 { font-size:1.55rem; letter-spacing:-.025em; margin:44px 0 14px; } h3 { font-size:1rem; margin:0 0 8px; } .note { color:var(--muted); margin:0; } .grid { display:grid; gap:16px; } .grid.four { grid-template-columns:repeat(4,1fr); } .grid.two { grid-template-columns:repeat(2,minmax(0,1fr)); } .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:0 4px 15px #17203308; } .kpi-label { color:var(--muted); font-weight:700; font-size:.87rem; } .kpi { font-size:2rem; font-weight:850; letter-spacing:-.05em; margin-top:4px; } .accent { color:var(--blue); } .good { color:var(--green); }
+    table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; } th,td { padding:12px 14px; text-align:right; border-bottom:1px solid var(--line); } th:first-child, td:first-child { text-align:left; } th { background:#eff3ff; font-size:.9rem; } tr:last-child td { border-bottom:0; } tr.selected td { background:#edf5ff; font-weight:750; }
+    .chart { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; } .bar-row { display:grid; grid-template-columns:155px 1fr 70px; gap:12px; align-items:center; margin:13px 0; font-size:.92rem; } .bar-track { height:18px; overflow:hidden; background:#e9edf5; border-radius:99px; } .bar { height:100%; min-width:4px; border-radius:99px; background:linear-gradient(90deg,var(--blue),var(--violet)); } .bar.pop { background:#a7b0c1; } .legend { color:var(--muted); font-size:.85rem; margin:0 0 8px; }
+    .callout { border-left:5px solid var(--violet); background:#f2efff; border-radius:0 14px 14px 0; padding:18px 20px; } ul { margin:8px 0; padding-left:20px; } li { margin:6px 0; } code { padding:.1em .35em; background:#edf0f5; border-radius:5px; font-size:.9em; } .tag { display:inline-block; padding:4px 9px; border-radius:99px; background:#e9f8f1; color:#0c7857; font-size:.78rem; font-weight:800; }
+    footer { margin-top:44px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem; } a { color:#2958dd; }
+    @media (max-width:760px) { .hero{padding:30px 24px}.grid.four,.grid.two{grid-template-columns:1fr 1fr}.bar-row{grid-template-columns:115px 1fr 60px} th,td{padding:10px 8px;font-size:.85rem} }
+    @media (max-width:480px) { .grid.four,.grid.two{grid-template-columns:1fr}.hero{padding:28px 20px} main{padding:14px 12px 44px} }
+    @media print { body{background:#fff;font-size:11pt} main{max-width:none;padding:0}.hero{box-shadow:none;border-radius:0}.card,.chart,table{box-shadow:none;break-inside:avoid} h2{margin-top:26px} }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <p class="eyebrow">DS300 · Báo cáo phần Hân</p>
+    <h1>Mô hình gu cá nhân hóa<br>từ lịch sử nghe thật</h1>
+    <p>Mục tiêu: kiểm tra liệu Collaborative Filtering có gợi ý đúng gu tốt hơn đề xuất bài phổ biến hay không; đồng thời thử tín hiệu <em>engagement</em> do Thy tiền xử lý.</p>
+  </section>
+
+  <h2>1. Kết luận nhanh</h2>
+  <section class="grid four">
+    <article class="card"><div class="kpi-label">Người dùng train</div><div class="kpi">10.000</div><p class="note">mẫu cố định, seed 42</p></article>
+    <article class="card"><div class="kpi-label">Người dùng test</div><div class="kpi">2.000</div><p class="note">test độc lập</p></article>
+    <article class="card"><div class="kpi-label">NDCG@10 test</div><div class="kpi accent">0,1302</div><p class="note">ALS binary</p></article>
+    <article class="card"><div class="kpi-label">Tốt hơn Popularity</div><div class="kpi good">5,36×</div><p class="note">theo NDCG@10</p></article>
+  </section>
+
+  <h2>2. Dữ liệu và giao thức đánh giá</h2>
+  <section class="grid two">
+    <article class="card">
+      <h3>Dữ liệu đã dùng</h3>
+      <ul>
+        <li><code>train.csv</code>, <code>test.csv</code> do Thy chuẩn bị từ lịch sử nghe thật.</li>
+        <li>Train gốc sau lọc 10-core: 7.027.515 tương tác, 289.572 user, 22.557 bài.</li>
+        <li>Split chính thức theo user, seed 42; test không được dùng để chọn mô hình.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h3>Cách chọn mô hình</h3>
+      <ul>
+        <li>Từ tập train 10.000 user, tiếp tục ẩn 15% mỗi user làm validation.</li>
+        <li>So sánh Popularity, ALS-binary, ALS-log và ALS-engagement.</li>
+        <li>Chọn theo <strong>NDCG@10 validation</strong>, sau đó train lại và đánh giá đúng một lần trên test.</li>
+      </ul>
+      <span class="tag">Không leakage từ test</span>
+    </article>
+  </section>
+
+  <h2>3. Mô hình đã thử</h2>
+  <table>
+    <thead><tr><th>Mô hình</th><th>Tín hiệu confidence</th><th>Vai trò</th><th>NDCG@10 validation</th></tr></thead>
+    <tbody>
+      <tr><td>Popularity</td><td>Số user từng nghe bài</td><td>Baseline không cá nhân hóa</td><td>0,0199</td></tr>
+      <tr class="selected"><td><strong>ALS binary</strong></td><td>Mọi lượt nghe có trọng số như nhau</td><td><strong>Được chọn</strong></td><td><strong>0,0862</strong></td></tr>
+      <tr><td>ALS log</td><td><code>log(1 + playcount)</code></td><td>Baseline implicit feedback</td><td>0,0835</td></tr>
+      <tr><td>ALS engagement</td><td><code>log(1+playcount) × (0,5 + engagement_score)</code></td><td>Thử tín hiệu nghe chủ động</td><td>0,0847</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Kết quả trên test độc lập</h2>
+  <table>
+    <thead><tr><th>Mô hình</th><th>Recall@10</th><th>NDCG@10</th><th>MAP@10</th><th>Recall@50</th><th>NDCG@50</th><th>MAP@50</th></tr></thead>
+    <tbody>
+      <tr><td>Popularity</td><td>0,0307</td><td>0,0243</td><td>0,0124</td><td>0,0846</td><td>0,0418</td><td>0,0155</td></tr>
+      <tr class="selected"><td><strong>ALS binary (selected)</strong></td><td><strong>0,1464</strong></td><td><strong>0,1302</strong></td><td><strong>0,0788</strong></td><td><strong>0,3007</strong></td><td><strong>0,1812</strong></td><td><strong>0,0908</strong></td></tr>
+    </tbody>
+  </table>
+
+  <section class="chart" style="margin-top:16px">
+    <h3>So sánh trực quan trên test</h3><p class="legend">Độ dài thanh tỉ lệ theo ALS binary = 100% cho từng chỉ số.</p>
+    <div class="bar-row"><span>Recall@10 · Popularity</span><div class="bar-track"><div class="bar pop" style="width:21%"></div></div><strong>0,0307</strong></div>
+    <div class="bar-row"><span>Recall@10 · ALS</span><div class="bar-track"><div class="bar" style="width:100%"></div></div><strong>0,1464</strong></div>
+    <div class="bar-row"><span>NDCG@10 · Popularity</span><div class="bar-track"><div class="bar pop" style="width:19%"></div></div><strong>0,0243</strong></div>
+    <div class="bar-row"><span>NDCG@10 · ALS</span><div class="bar-track"><div class="bar" style="width:100%"></div></div><strong>0,1302</strong></div>
+    <div class="bar-row"><span>MAP@10 · Popularity</span><div class="bar-track"><div class="bar pop" style="width:16%"></div></div><strong>0,0124</strong></div>
+    <div class="bar-row"><span>MAP@10 · ALS</span><div class="bar-track"><div class="bar" style="width:100%"></div></div><strong>0,0788</strong></div>
+  </section>
+
+  <h2>5. Tín hiệu engagement: không thắng chung, nhưng có ý nghĩa</h2>
+  <section class="grid two">
+    <article class="card"><h3>Kết quả tổng thể</h3><p>ALS binary được chọn vì NDCG@10 validation là <strong>0,0862</strong>, cao hơn engagement <strong>0,0847</strong>. Vì vậy không kết luận rằng engagement luôn tốt hơn.</p></article>
+    <article class="card"><h3>Phát hiện theo nhóm tương tác</h3><p>Ở nhóm <em>favorite</em>, engagement có NDCG@10 validation <strong>0,0811</strong>, cao hơn binary <strong>0,0581</strong>. Điều này gợi ý tín hiệu engagement phù hợp hơn khi muốn giữ đúng các bài người dùng thật sự gắn bó.</p></article>
+  </section>
+
+  <h2>6. Phần của Hân đã đủ chưa?</h2>
+  <section class="callout">
+    <strong>Đủ cho milestone mô hình gu:</strong> đã có dữ liệu thật, baseline, mô hình CF/ALS, cải tiến engagement, protocol không leakage, metric chuẩn và output tái lập. Không nên hứa rằng đây là mô hình gu + mood hoàn chỉnh; phần hybrid cần ghép tiếp nhánh mood của Như.
+  </section>
+  <section class="grid two" style="margin-top:16px">
+    <article class="card"><h3>File bằng chứng</h3><ul><li><code>runs/taste_10k_01/metrics.csv</code></li><li><code>selected_config.json</code></li><li><code>manifest.json</code></li><li>Per-user metrics và recommendations CSV</li></ul></article>
+    <article class="card"><h3>Hướng cải tiến tiếp theo</h3><ul><li>Chọn weighting theo kiểu nghe: habitual/favorite vs exploration.</li><li>Rerank đa dạng nghệ sĩ khi có file artist.</li><li>Ghép mood score: <code>α × score_gu + (1−α) × score_mood</code>.</li><li>Đánh giá tách “đúng gu” và “đúng mood”.</li></ul></article>
+  </section>
+  <footer>Nguồn số liệu: <a href="../runs/taste_10k_01/metrics.csv">metrics.csv của thí nghiệm taste_10k_01</a>. Có thể mở file HTML bằng Chrome/Edge, hoặc nhấn Ctrl+P → Save as PDF để nộp.</footer>
+</main>
+</body>
+</html>
