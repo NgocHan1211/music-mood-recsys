@@ -1,0 +1,35 @@
+{
+  "train_source": "C:\\Users\\Hp X2 G3\\Downloads\\datads300\\train.csv",
+  "test_source": "C:\\Users\\Hp X2 G3\\Downloads\\datads300\\test.csv",
+  "train_sha256": "29cda701858ec06f5b6a1ecb65b5ca86d1dc677e56c7d053cebef09db92afb47",
+  "test_sha256": "ea43ad3602c7035732a4a77e617b49eb15d0bbe6942e64aabd4835a01dcf73c1",
+  "seed": 42,
+  "backend": "implicit",
+  "weightings_considered": [
+    "binary",
+    "log",
+    "engagement"
+  ],
+  "selected_config": {
+    "factors": 32,
+    "regularization": 0.1,
+    "als_alpha": 10.0,
+    "weighting": "binary",
+    "iterations": 8,
+    "seed": 42
+  },
+  "max_train_users": 10000,
+  "max_eval_users": 2000,
+  "max_per_artist": 0,
+  "official_test_used_for_selection": false,
+  "validation_policy": "15% per-user validation split drawn only from official train.csv",
+  "test_engagement_policy": "reporting strata only; never model input",
+  "candidate_policy": "full fitted catalogue minus observed training history",
+  "train_rows": 193258,
+  "test_rows": 48088,
+  "train_users": 10000,
+  "train_tracks": 17691,
+  "python": "3.10.10",
+  "numpy": "1.26.4",
+  "pandas": "2.2.3"
+}
