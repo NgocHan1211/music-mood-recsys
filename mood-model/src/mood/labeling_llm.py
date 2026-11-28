@@ -34,6 +34,7 @@ import os
 import re
 import threading
 import time
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
@@ -43,6 +44,8 @@ from . import api
 from .config import GROUPS, PROCESSED_DIR, SEED, load_config
 from .io import load_tracks
 from .labeling import LABELS_PARQUET
+
+MOOD_ROOT = Path(__file__).resolve().parents[2]
 
 # Ba đường chạy. "mlx" là mặc định vì miễn phí và không cần đăng ký gì:
 #   local          mô hình mở chạy ngay trên máy (torch + MPS), không tốn tiền
@@ -412,7 +415,12 @@ def main() -> None:
     parser.add_argument("--backend", choices=list(BACKENDS), default=BACKEND,
                         help="mlx = mô hình mở chạy trên máy, miễn phí (mặc định)")
     parser.add_argument("--model", default=None, help="đổi mô hình của backend đang chọn")
-    parser.add_argument("--stage", choices=["calib", "expand", "eval", "all"], default="all")
+    parser.add_argument("--stage", choices=["calib", "expand", "eval", "gold", "all"],
+                        default="all",
+                        help="gold = chạy trên đúng danh sách bài trong --tracks-file")
+    parser.add_argument("--tracks-file", type=Path,
+                        default=MOOD_ROOT / "annotation" / "KEY_KHONG_MO_TRUOC_KHI_GAN.csv",
+                        help="CSV có cột track_id — dùng cho --stage gold")
     parser.add_argument("--n-calib", type=int, default=1500,
                         help="số bài đã có nhãn tay dùng để hiệu chuẩn")
     parser.add_argument("--n-expand", type=int, default=0,
@@ -447,6 +455,25 @@ def main() -> None:
         print("-- Nhánh mở rộng --")
         for v in VARIANTS:
             run_variant(expand_s, v, "expand", args.workers, args.refresh)
+    if args.stage == "gold":
+        # Chạy trên đúng bộ bài của tập nhãn người, để dòng "so với LLM" trong
+        # score_agreement có đủ n thay vì chỉ trùng vài bài ngẫu nhiên.
+        ids = pd.read_csv(args.tracks_file, dtype={"track_id": str})["track_id"]
+        ids = set(ids.dropna().unique())
+        gold = df[df["track_id"].isin(ids)].reset_index(drop=True)
+        missing = len(ids) - len(gold)
+        print(f"-- Nhánh gold: {len(gold):,}/{len(ids):,} bài khớp catalogue"
+              + (f" ({missing} bài không khớp)" if missing else "") + " --")
+        if gold.empty:
+            raise SystemExit("Không bài nào khớp — kiểm tra lại --tracks-file.")
+        for v in VARIANTS:
+            out = run_variant(gold, v, "gold", args.workers, args.refresh)
+            n_ok = int((out["llm_nhom"] != UNKNOWN).sum())
+            print(f"  [{v}/gold] xong {len(out):,} bài | "
+                  f"{n_ok:,} bài LLM dám chọn nhóm ({100*n_ok/max(len(out),1):.1f}%) "
+                  f"-> {cache_csv(v, 'gold').name}")
+        print("\nKhông in nhãn ra đây: tập này dùng để đối chiếu SAU khi người gán xong.")
+
     if args.stage in ("eval", "all"):
         evaluate(df, hand, calib_s, expand_s, n_users, cfg)
 

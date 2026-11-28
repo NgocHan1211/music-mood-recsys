@@ -158,3 +158,38 @@ Nguồn: mô hình gu thật của TV2 (`music-mood-recsys` commit `357b4c2` + `
   +24,3% (cohort đầy đủ, 18.001 cặp) và +25,2% (cohort 10k của G1). Báo cáo dùng **+24,3%**;
   giữ +24,0% (`log`/15) làm phép kiểm tra độ bền. Chi tiết: `reports/RESULTS.md` mục 27.
 - **Cả nhóm**: bổ sung bootstrap CI theo user; chênh −0,92% chưa đủ để kết luận chắc "ngang nhau".
+
+---
+
+## Phần V — Bộ nhãn tâm trạng do người nghe gán
+
+- [x] `src/mood/build_label_set.py`: mẫu phân tầng 180 bài (12 × 3 trạng thái × 5 nhóm), che hết nhãn máy.
+- [x] Xác minh `spotify_preview_url` còn phục vụ audio thật (HTTP 206, `audio/mpeg`, phủ 100%).
+- [x] `docs/huong_dan_gan_nhan_mood.md`: hướng dẫn 7 mục, 3 quy tắc cấm, 6 hạn chế.
+- [x] `src/mood/make_label_tool.py` → `annotation/gan_nhan.html`: trang nghe-và-bấm, nút đặt theo centroid đã học.
+- [x] `src/mood/score_agreement.py`: Fleiss/Cohen kappa, nhãn chốt đa số phiếu, so theo từng tầng.
+- [x] `labeling_llm.py --stage gold`: chạy L1 trên đúng 180 bài → 99,4% / 96,1% độ phủ, hai biến thể trùng 65,0%.
+- [ ] **Ba người gán hết 180 bài** → `annotation/nhan_{nhu,han,thy}.csv`.
+- [ ] Chạy `python -m src.mood.score_agreement`, ghi κ và các bảng khớp vào `RESULTS.md` mục 28.
+- [ ] Họp rà các bài `tranh_chap` — chỉ chỉnh **hướng dẫn**, không chỉnh bảng trọng số tag.
+
+**Xong khi:** có `annotation/mood_gold.csv` (nhãn chốt) + `agreement_report.csv`, và mục 28 của
+`RESULTS.md` có Fleiss' kappa thật cùng tỷ lệ khớp của T2 / T4 / LLM tách theo ba tầng.
+
+### Phần V-b — Thay tạm nhãn người bằng đối chiếu hệ nhãn (28/11)
+Nhóm không kịp gán nhãn trước buổi báo cáo. Đã làm phần đo được mà không cần nhãn người:
+
+- [x] Bù nhánh hiệu chuẩn L1 cho đủ **1.500 bài** mẫu `rng(seed=42)` (cache trước chỉ trùng 1.006/1.500).
+- [x] Chạy `--stage eval`: hiệu chuẩn, mở rộng, và tách theo độ phổ biến.
+- [x] `src/mood/compare_label_systems.py`: đối chiếu 4 hệ nhãn trên 180 bài, tách theo tầng.
+- [x] **Sửa lỗi báo cáo**: `mood_pred` là bản sao `mood_label` ở bài `mood_source='tag'` (99,88% toàn
+      dữ liệu) → dòng T4 từng hiện khớp 100% với T2 như hai hệ độc lập. Đã lọc trong cả
+      `compare_label_systems.py` và `score_agreement.py`, kèm 8 test chặn lỗi quay lại.
+- [x] Ghi `RESULTS.md` mục 28.8 và mục **29** (L1 — kết quả âm).
+
+**Kết luận:** L1 **không dùng được** — thêm nhãn LLM làm bộ phân loại tụt macro-F1 **0,5656 → 0,5236**,
+và nhãn LLM khớp vị trí âm thanh kém hơn bảng tay (38,3% / 44,8% so với 50,7%). `llm_ten` chỉ hơn mức
+đoán bừa **+8,7 điểm**. **Không thay được nhãn người**: trên tầng `no_emotion_tag`, T4 ↔ L1 chỉ
+κ = 0,104, và T2 với T4-mô-hình loại trừ nhau nên tam giác hoá là bất khả thi.
+
+- [ ] **Vẫn phải gán nhãn người** (Phần V ở trên) — mục 28.8 không thay thế, nó chỉ chứng minh thêm là cần.

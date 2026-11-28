@@ -1,0 +1,181 @@
+item_id,track_id,label_status,mood_label,mood_pred,mood_confidence,mood_source,valence,energy,tags,name,artist
+M001,TRLTISM128F424FEFB,conflict,,nang_dong,0.8004874144357528,model,0.617,0.764,"electronic, indie, experimental, instrumental, post_rock, funk, piano, noise",Royal Gregory,Holy Fuck
+M002,TRCVWMY12903CA7289,conflict,,thu_gian,0.4519486594500109,model,0.542,0.72,"rock, punk, industrial, punk_rock, male_vocalists",Bitches,Mindless Self Indulgence
+M003,TRQMLAA128EF35F638,labeled,buon,buon,0.6055963562642245,tag,0.0803,0.148,"classical, gothic_metal, gothic",Nachtschatten,Lacrimosa
+M004,TRYICHI128F425B25B,labeled,vui,vui,0.7020720947048709,tag,0.861,0.924,"reggae, ska",If We Want To,Big D And The Kids Table
+M005,TRSNPCF128E0785D5A,conflict,,thu_gian,0.5684725084572689,model,0.911,0.628,"alternative, indie, 80s, british, new_wave, post_punk, indie_pop, britpop",I Don't Owe You Anything,The Smiths
+M006,TRGRUXA128F4292BD0,conflict,,buon,0.3590974973193241,model,0.848,0.919,"punk, punk_rock",Somewhere On Fullerton,Allister
+M007,TRDVCNF128F9329CEA,no_emotion_tag,,thu_gian,0.5210351803282649,model,0.416,0.313,"00s, cover",I'm Yours / Somewhere Over The Rainbow,Straight No Chaser
+M008,TRIMKPV128F92F3FB4,labeled,vui,vui,0.6335245377304528,tag,0.6,0.919,"pop, female_vocalists, dance, soul, 90s, funk, rnb",Free Your Mind,En Vogue
+M009,TRAYKFO128F92F101C,conflict,,vui,0.7995301989637084,model,0.863,0.319,"jazz, soul, funk, oldies",On Broadway,George Benson
+M010,TRBCNJZ128F92FA047,conflict,,nang_dong,0.773168719477496,model,0.0786,0.394,"electronic, ambient, psychedelic, trance",Avratz,Infected Mushroom
+M011,TRNMYSN128F9300B5D,conflict,,vui,0.49053709533349465,model,0.635,0.775,"rap, hip_hop",Babies With Guns,Aesop Rock
+M012,TRUZPNY128F147FD23,labeled,buon,buon,0.5829903786434862,tag,0.525,0.893,"rock, indie, emo, pop_rock",Someone Else's Arms,MAE
+M013,TRAGWUX12903CEEF08,conflict,,buon,0.352798051940522,model,0.267,0.588,doom_metal,Scourge,Sleep
+M014,TRZTHTC128F423D121,no_emotion_tag,,nang_dong,0.5041132030574629,model,0.369,0.597,"electronic, female_vocalists, swedish",Hold Me So Tight,Sally Shapiro
+M015,TRFYYSO128F429726B,labeled,vui,vui,0.9817236781825547,tag,0.866,0.762,reggae,My Name,Sean Paul
+M016,TRFOUJM128F9339EAF,conflict,,buon,0.47975080608326126,model,0.13,0.715,"rock, alternative, post_rock, post_hardcore",The Great Exchange,Thrice
+M017,TRSBRTH128F9310DC0,no_emotion_tag,,cang_thang,0.39547500256160434,model,0.686,0.885,"rock, alternative, alternative_rock, 90s, britpop",Lewis (Mistreated),Radiohead
+M018,TRHSRZV128F4213C6F,no_emotion_tag,,cang_thang,0.6602467998387331,model,0.488,0.547,"alternative, alternative_rock, 90s, grunge",Sadness,Porno for Pyros
+M019,TRNZCVL128EF3437B1,labeled,nang_dong,nang_dong,0.9063982321158943,tag,0.497,0.85,"electronic, indie, indie_rock, dance, post_punk, electro, 00s",Don Gon Do It,The Rapture
+M020,TRDFOTH128E0781EB3,no_emotion_tag,,thu_gian,0.6331215058176065,model,0.459,0.577,"rock, alternative",Where's Summer B.?,Ben Folds Five
+M021,TRMBNER128F426603A,labeled,vui,vui,0.8346154733294897,tag,0.948,0.512,"rock, alternative, alternative_rock, funk",Ain't No Good,Cake
+M022,TRTZCFO128F147A339,labeled,nang_dong,nang_dong,0.961013553404656,tag,0.379,0.853,"electronic, electro",Bad Up Your Betterness,The Presets
+M023,TRHPCHJ128F148F9A9,labeled,vui,vui,0.9354268267307271,tag,0.439,0.57,reggae,Eu Sei,Papas Da Língua
+M024,TRAPEFC128F427AB27,labeled,nang_dong,nang_dong,0.6621447706291629,tag,0.504,0.805,"dance, rap, hip_hop, rnb",Sexual Eruption,Snoop Dogg
+M025,TRGDBDH128F42918A9,no_emotion_tag,,buon,0.5233630946040378,model,0.516,0.792,"indie, experimental, indie_rock",Burying Luck,Minus the Bear
+M026,TRXQVEH128F92F345F,labeled,thu_gian,thu_gian,0.8709581881614545,tag,0.368,0.621,"electronic, ambient, instrumental, chillout, psychedelic, trip_hop, downtempo, guitar, lounge, chill",Fifth Ave,Gold Panda
+M027,TRLQMIH128F14733EC,no_emotion_tag,,buon,0.638961161861725,model,0.0713,0.246,"instrumental, soundtrack",Parlay,Hans Zimmer
+M028,TRCYPPN128F92DE2CC,no_emotion_tag,,vui,0.4684740001115105,model,0.919,0.9,"rock, blues, 00s, blues_rock","Heartbroken, In Disrepair",Dan Auerbach
+M029,TRKLBTZ128F92EEE60,labeled,nang_dong,nang_dong,0.9944258272625959,tag,0.616,0.707,techno,Rikarda,Oliver Huntemann
+M030,TRJETCC128F14840CB,conflict,,buon,0.5666357086366173,model,0.032,0.0291,"classical, soundtrack",Princess Leia's Theme,John Williams
+M031,TRUKJJD12903CCBB7B,labeled,cang_thang,cang_thang,0.9960981756098183,tag,0.0232,0.999,black_metal,Hellfire,1349
+M032,TROTVOA128E0793EB5,conflict,,vui,0.6403401134670437,model,0.554,0.716,"rock, blues, hip_hop, blues_rock",Blinded By The Sun,Everlast
+M033,TRNNDFE128F931FB02,no_emotion_tag,,buon,0.4904190608792694,model,0.435,0.738,pop_rock,Two Worlds Collide,Demi Lovato
+M034,TRAAKDG128F42A0ECB,conflict,,vui,0.7405745131438451,model,0.76,0.82,"pop, female_vocalists, singer_songwriter, dance, 00s",Hips Don't Lie,Shakira
+M035,TRAJGRW12903CF3F03,labeled,cang_thang,cang_thang,0.6955795841057735,tag,0.252,0.828,"rock, classic_rock, hard_rock, 80s, heavy_metal",Love Bites,Def Leppard
+M036,TRUGMDK128F423588A,conflict,,nang_dong,0.8028772196311836,model,0.845,0.974,"punk, punk_rock",The Man I Killed,NOFX
+M037,TRIQWIJ128F9325BA5,labeled,buon,buon,0.7506719900582882,tag,0.503,0.919,"experimental, post_rock",Better Get a Broom!,Hella
+M038,TRSCNQU128F426EC2B,labeled,nang_dong,nang_dong,0.9035619749135875,tag,0.268,0.882,"electronic, experimental, electro, french",Analog Worms Attack,Mr. Oizo
+M039,TRVKGJW128F92E555B,labeled,buon,buon,0.7864721070596271,tag,0.0741,0.32,"instrumental, post_rock, psychedelic_rock, guitar","You, You're Awesome",Do Make Say Think
+M040,TRPJZYA128E0796500,no_emotion_tag,,cang_thang,0.42270898560723186,model,0.472,0.922,"alternative, indie, 90s, post_punk",Far Gone and Out,The Jesus and Mary Chain
+M041,TRTFHNO128F42703DC,no_emotion_tag,,buon,0.3511476249939738,model,0.172,0.754,"rock, alternative, indie, female_vocalists",Too Many Happy Faces,K's Choice
+M042,TRNLQRS128F92F54D1,labeled,vui,vui,0.7285864103955189,tag,0.836,0.716,"rock, reggae, ska",Bury It Down Low,RX Bandits
+M043,TRAJMGT12903CE439E,labeled,buon,buon,0.6574584550696927,tag,0.514,0.463,"indie, indie_rock, post_rock",Transcontinental,Pedro the Lion
+M044,TRJAQQQ128F421BD3F,no_emotion_tag,,thu_gian,0.6048004119432584,model,0.279,0.432,"alternative, indie, experimental",Things I Did When I Was Dead,No Age
+M045,TRJTJAO128F42ACE87,conflict,,vui,0.2678693153659134,model,0.363,0.833,"indie, pop, female_vocalists, singer_songwriter, british, piano, indie_pop, britpop",Mariella,Kate Nash
+M046,TRBVUIT128E07938EC,no_emotion_tag,,nang_dong,0.6206522042185777,model,0.902,0.956,"rock, alternative_rock, 90s, grunge",With David Bowie,Veruca Salt
+M047,TRCSPHY128F92F8F14,no_emotion_tag,,buon,0.4909146457302617,model,0.0519,0.342,soundtrack,Wheel of Fortune,Hans Zimmer
+M048,TRIPKBL128F931713D,conflict,,nang_dong,0.4069885003715237,model,0.792,0.903,"rock, indie, indie_rock, new_wave, britpop",Love and Destroy,Franz Ferdinand
+M049,TRMGCZS128F933049B,no_emotion_tag,,nang_dong,0.47762459961927,model,0.638,0.795,"electronic, pop, pop_rock",True To me,Metro Station
+M050,TROARTG128F42732C6,no_emotion_tag,,vui,0.4208197245311978,model,0.772,0.933,,Batonga,Angélique Kidjo
+M051,TRUXBJC12903CE44F7,no_emotion_tag,,cang_thang,0.38370147339337385,model,0.514,0.95,"electronic, alternative, indie, pop, alternative_rock, indie_rock, psychedelic, american, indie_pop, psychedelic_rock",It's Working,MGMT
+M052,TRJRURF128F423DA73,labeled,cang_thang,cang_thang,0.9997808347476644,tag,0.0972,0.983,"death_metal, grindcore",Meticulous Invagination,Aborted
+M053,TROGJUO128F42A8E36,no_emotion_tag,,nang_dong,0.8627559512689114,model,0.729,0.915,"electronic, synthpop, pop_rock",Jesus Doesn't Love Me,Dragonette
+M054,TRPUKOU128F422AD8A,conflict,,cang_thang,0.9902042855583993,model,0.184,0.813,"doom_metal, gothic_metal",A Kiss to Remember,My Dying Bride
+M055,TRGKPNR128F427A71A,no_emotion_tag,,thu_gian,0.9140589139076595,model,0.294,0.362,"rock, indie, alternative_rock, indie_rock, blues, blues_rock",All You Ever Wanted,The Black Keys
+M056,TRSQIKG128F932CD09,labeled,cang_thang,cang_thang,0.6613616649451575,tag,0.389,0.946,"power_metal, symphonic_metal",Immortal Lives Young,Firewind
+M057,TRWMTES128F423F03D,labeled,buon,buon,0.6729832499874566,tag,0.498,0.812,"alternative, indie, female_vocalists, indie_rock, beautiful",Elephant Woman,Blonde Redhead
+M058,TRFCHLE128F930AB29,labeled,thu_gian,thu_gian,0.841304963366048,tag,0.153,0.191,"female_vocalists, singer_songwriter, acoustic",To Let Myself Go,Ane Brun
+M059,TRMCGSH128F4272541,conflict,,cang_thang,0.7081412060230465,model,0.572,0.987,"rock, punk_rock, emo",Radio #2,The Ataris
+M060,TRGZXVO128C71962CF,conflict,,nang_dong,0.4513452932924322,model,0.815,0.936,"alternative_rock, punk, punk_rock",Wendy Clear,blink-182
+M061,TRYXHCW128F93231EF,conflict,,nang_dong,0.5840391549609446,model,0.936,0.9,ska,Eres Un@ Mas,Ska-P
+M062,TRUICWR128F425A6F3,conflict,,nang_dong,0.9339921294472209,model,0.58,0.717,"electronic, dance, chillout, house, trip_hop, ska",But I Feel Good,Groove Armada
+M063,TRSBNBV128F4213CB9,no_emotion_tag,,thu_gian,0.9179882368306583,model,0.506,0.643,"alternative, indie, german",Balu,Kettcar
+M064,TRISJBA128F4240E0A,labeled,thu_gian,thu_gian,0.5351151670188175,tag,0.48,0.75,"alternative, indie, indie_rock, chillout, 90s, american, emo",Interstate 8,Modest Mouse
+M065,TRVOHWB12903CF4352,labeled,cang_thang,cang_thang,0.7024090645186444,tag,0.286,0.881,progressive_metal,Firmament,The Ocean
+M066,TROYTEP128F92DE2D5,no_emotion_tag,,vui,0.5888659995315169,model,0.816,0.662,"rock, blues, male_vocalists, guitar, blues_rock",Keep It Hid,Dan Auerbach
+M067,TRJWDXF128EF3582C0,no_emotion_tag,,nang_dong,0.8528311641743391,model,0.298,0.318,,The Right Wing,Luomo
+M068,TREMDLA128F4286AF4,no_emotion_tag,,thu_gian,0.4207854643983715,model,0.272,0.454,country,Life Ain't Always Beautiful,Gary Allan
+M069,TRBTQEW128F1468591,conflict,,thu_gian,0.8580775054498864,model,0.133,0.343,"singer_songwriter, oldies, psychedelic_rock, avant_garde",Oh Jim,Lou Reed
+M070,TRIGSBR128F4266BA7,conflict,,thu_gian,0.4200728838161389,model,0.322,0.608,"rock, singer_songwriter, guitar",More You Understand,Howie Day
+M071,TRRWWQP128F4245757,conflict,,thu_gian,0.7576016948816952,model,0.0414,0.0635,"classical, piano",Valse romantique,Claude Debussy
+M072,TRRGBXO128F428280C,no_emotion_tag,,nang_dong,0.4042456592653577,model,0.84,0.759,"rock, classic_rock, 60s, cover",I Wanna Be Your Man,The Rolling Stones
+M073,TRJSDVW128F1467D54,conflict,,vui,0.7516883531758984,model,0.883,0.652,"new_wave, post_punk, 70s",Praying Hands,Devo
+M074,TRCRLAR128F4227C2D,no_emotion_tag,,thu_gian,0.8883418605988153,model,0.181,0.568,"indie, german",Electric Bear,The Notwist
+M075,TRDFXXK128F92E36D5,conflict,,nang_dong,0.9268497538449911,model,0.676,0.941,"electronic, funk, electro, synthpop, idm",Me & My Man,Chromeo
+M076,TRBLBSD128F1490EF0,conflict,,thu_gian,0.7455276745921006,model,0.0411,0.0562,"classical, new_age",In Our Tears,Secret Garden
+M077,TRFCYMW128F92CB775,conflict,,buon,0.6426508048346682,model,0.0394,0.386,"ambient, instrumental, psychedelic, post_rock, psychedelic_rock",Mithridate,The Evpatoria Report
+M078,TRGSIKC128F421BAEF,conflict,,cang_thang,0.49533394540298714,model,0.468,0.854,power_metal,Deadmaker,Edguy
+M079,TRPOMJY128F1486DEC,conflict,,buon,0.3757512454087575,model,0.241,0.63,"alternative, indie, experimental, folk, singer_songwriter, beautiful",Mount Wroclai (Idle Days),Beirut
+M080,TRXVHWR128F1464D00,conflict,,thu_gian,0.6195469565573384,model,0.192,0.202,"trance, new_age",Total Eclipse of the Moon,Enigma
+M081,TRXDINI128F146B94D,labeled,buon,buon,0.8010138133608413,tag,0.0772,0.613,post_rock,Rosemary,Deftones
+M082,TRFHUMJ128F425AD2A,no_emotion_tag,,vui,0.3411499476208648,model,0.692,0.731,"rock, blues",I Wish I Knew (How It Would Feel To Be Free),The Derek Trucks Band
+M083,TRGJZXL128F932725B,no_emotion_tag,,vui,0.6263375582455377,model,0.751,0.597,guitar,Too Many Dicks (On The Dance Floor),Flight of the Conchords
+M084,TRSWDVR128F424880C,no_emotion_tag,,buon,0.40098547420899444,model,0.175,0.575,"progressive_rock, psychedelic_rock",Always Never,Porcupine Tree
+M085,TRWFKXV128F4255BE0,no_emotion_tag,,nang_dong,0.3410394237977701,model,0.661,0.865,"rock, alternative, indie, alternative_rock, indie_rock, post_punk",The Scale,Interpol
+M086,TRONIFO128F4262360,conflict,,cang_thang,0.6742479416749805,model,0.691,0.963,"punk, punk_rock",Happy Guy,NOFX
+M087,TRIVEDY128F42A279B,no_emotion_tag,,cang_thang,0.5588686057279029,model,0.418,0.804,"rock, alternative, pop, classic_rock, 00s",Elevation,U2
+M088,TRWTJDJ128F92CCF2A,labeled,thu_gian,thu_gian,0.6878698106638635,tag,0.621,0.552,"indie, experimental, folk, american, 00s",No One Does It Like You,Department of Eagles
+M089,TRLPVRA128F424D3D6,no_emotion_tag,,vui,0.38320261385282334,model,0.822,0.668,"rock, alternative, indie, indie_rock, british, britpop",Come Closer,Miles Kane
+M090,TRYTJPW128E07895E0,labeled,nang_dong,nang_dong,0.9655662628872697,tag,0.425,0.616,"electronic, techno, electro",Allergic,Miss Kittin
+M091,TRNWBBY128F427CFD8,no_emotion_tag,,cang_thang,0.8590633428108616,model,0.481,0.948,german,Unbesiegt,Equilibrium
+M092,TRKLSXM128F1465A66,labeled,nang_dong,nang_dong,0.8564340117173641,tag,0.964,0.742,"electronic, indie, electro",The Athlete,Erlend Øye
+M093,TRCQEKV128F933A2F3,labeled,vui,vui,0.7756828295372299,tag,0.751,0.962,"alternative, funk, psychedelic_rock",Bad Fever,The Asteroids Galaxy Tour
+M094,TRNGANC128F4255F56,no_emotion_tag,,thu_gian,0.6158637481534002,model,0.373,0.979,"alternative_rock, grunge",All Your Lies,Soundgarden
+M095,TRNWRZQ128EF34373C,labeled,cang_thang,cang_thang,0.894337023075775,tag,0.102,0.984,"hardcore, metalcore, post_hardcore, screamo",The Minor Prophets,Haste the Day
+M096,TRAIFKE128F92D5D36,no_emotion_tag,,vui,0.3045936934885061,model,0.479,0.772,"female_vocalists, country, love",Should've Said No,Taylor Swift
+M097,TRDMVDA128F424F7CE,no_emotion_tag,,nang_dong,0.9061072846735643,model,0.345,0.408,,Fluteorgie,Hug
+M098,TRHTQHU128F429511B,labeled,vui,vui,0.9601489276701167,tag,0.478,0.655,reggae,Bad From Mi Born,Munga
+M099,TRVVQDF128F932A497,labeled,buon,buon,0.6706421290501169,tag,0.0303,0.287,"ambient, experimental, instrumental, post_rock, beautiful",What Do You Go Home To?,Explosions in the Sky
+M100,TRDCPXK128F427AA44,labeled,vui,vui,0.6855902976099731,tag,0.798,0.669,"soul, oldies",After The Dance,Marvin Gaye
+M101,TRAGAER128F9319F54,labeled,thu_gian,thu_gian,0.7829077025370295,tag,0.525,0.683,"electronic, jazz, chillout, trip_hop, downtempo, lounge",Flying Officer,Skalpel
+M102,TREVTOT128F425DD50,conflict,,buon,0.7423176620857618,model,0.0395,0.58,"indie, ambient, experimental, instrumental, post_rock",Hunted by a Freak,Mogwai
+M103,TRCTSJA128EF35C788,labeled,thu_gian,thu_gian,0.8731091174698478,tag,0.0796,0.415,"electronic, ambient, instrumental, chillout, downtempo, idm",Last Songs,Dntel
+M104,TRUEFEV128F92D7AED,labeled,cang_thang,cang_thang,0.8892785357653944,tag,0.317,0.957,"metal, death_metal, heavy_metal, melodic_death_metal",Transparent,In Flames
+M105,TRGPYTY128F92DDE4A,no_emotion_tag,,thu_gian,0.40328925552311395,model,0.342,0.486,female_vocalists,I Know What You Are,Oi Va Voi
+M106,TRGQQTC128F4240FF8,conflict,,nang_dong,0.375789350167024,model,0.595,0.851,"indie, punk, indie_rock, british, 00s, britpop",Side Of The Road,Babyshambles
+M107,TRRJOUL128F1456792,conflict,,vui,0.46475042283853646,model,0.735,0.794,"electronic, funk, electro, french",Baby I'm Yours,Breakbot
+M108,TRSRWMZ128F42597A4,conflict,,buon,0.5546944856303656,model,0.172,0.461,"electronic, chillout, industrial, trance, techno, downtempo, idm",Rino's Prayer,Leftfield
+M109,TRBMOEE128F931EB11,conflict,,cang_thang,0.44342587699210056,model,0.244,0.958,"gothic_metal, gothic, symphonic_metal",The Mind Maelstrom,Sirenia
+M110,TRSSYKK128F4280875,no_emotion_tag,,cang_thang,0.49057522783451135,model,0.0395,0.914,"alternative, indie_rock",Buoy,The Joy Formidable
+M111,TRLZEWW128F9327F7C,no_emotion_tag,,vui,0.7504588544253263,model,0.888,0.632,"pop, 90s, swedish",Lucky Love,Ace of Base
+M112,TRACBWP128C7196948,no_emotion_tag,,cang_thang,0.4086441705197221,model,0.363,0.81,"rock, alternative_rock, hard_rock",It's Not Me,3 Doors Down
+M113,TRGFMDK128E078BE09,labeled,nang_dong,nang_dong,0.5760311378656741,tag,0.752,0.8,"dance, rap, punk_rock, hip_hop",Such a Twat,The Streets
+M114,TRFJTEH128F1497E54,no_emotion_tag,,buon,0.43310555929144723,model,0.218,0.489,"rock, psychedelic_rock",Don't Run Our Hearts Around,Black Mountain
+M115,TRUTOGZ128F4258ACC,no_emotion_tag,,buon,0.4955591239222698,model,0.116,0.262,"electronic, instrumental, 00s",Shiller,Ratatat
+M116,TRKBEFY128F42A6C92,conflict,,cang_thang,0.8343972743935261,model,0.67,0.922,"punk, punk_rock, emo",This Disaster,New Found Glory
+M117,TRLKCAF128F422C143,labeled,nang_dong,nang_dong,0.704861317369617,tag,0.477,0.936,"punk, dance, love",My Worst Nightmare,Forever the Sickest Kids
+M118,TRIHQQH128F932D5D2,conflict,,cang_thang,0.7683779373041826,model,0.489,0.907,"alternative, punk, punk_rock, emo, screamo",The Shower Scene,Brand New
+M119,TRRNFTF128F9310CA5,no_emotion_tag,,vui,0.495203918940696,model,0.217,0.437,indie_pop,Goner,Twenty One Pilots
+M120,TRGQFUZ128F92ED646,conflict,,buon,0.41900326414306277,model,0.102,0.628,"pop, female_vocalists, soul, rnb, love, beautiful, 00s",That's Why You're Beautiful,Beyoncé
+M121,TRGQXVN128F4263820,labeled,buon,buon,0.5778934889446837,tag,0.15,0.912,"post_rock, progressive_metal",Shock Me,Baroness
+M122,TRRYUDS128F146C9FE,conflict,,thu_gian,0.47115900491786383,model,0.525,0.615,"indie, pop, power_metal",Change In The Weather,The Concretes
+M123,TRQOUMO128F9324F05,no_emotion_tag,,nang_dong,0.5226191769031159,model,0.712,0.815,"rock, alternative, psychedelic, psychedelic_rock",Don't You Forget It,Allah-Las
+M124,TRQRIAI128F4229606,no_emotion_tag,,cang_thang,0.9302693618892384,model,0.777,0.975,"alternative, indie, indie_rock, british, britpop",I'm Not Gonna Take This,The Pigeon Detectives
+M125,TRCRLWW128F428C40F,labeled,nang_dong,nang_dong,0.5901982301657226,tag,0.42,0.994,"punk, ska",You Guys Want One Of These?,The Flatliners
+M126,TRILJFV128F9341358,labeled,vui,vui,0.9022864587776013,tag,0.791,0.759,"rock, alternative, reggae",Global A Go-Go,Joe Strummer and the Mescaleros
+M127,TRJKAUI128F429873F,no_emotion_tag,,buon,0.39685078018078795,model,0.381,0.688,"rock, alternative, alternative_rock, pop_rock",Come Back Down,Lifehouse
+M128,TRJUAGI128F426177C,labeled,thu_gian,thu_gian,0.7942090988014757,tag,0.626,0.268,"indie, female_vocalists, folk, singer_songwriter, acoustic",Gray Or Blue,Jaymay
+M129,TRURIYJ12903CB50FA,conflict,,vui,0.6758337055219368,model,0.656,0.81,"electronic, hardcore, electro, screamo",Sex Toyz,Brokencyde
+M130,TRHGWHS12903CC4552,no_emotion_tag,,nang_dong,0.8207710393507311,model,0.565,0.616,indie_pop,Body of Years,Mother Mother
+M131,TRPIELK128F931F06C,labeled,buon,buon,0.7106120456084263,tag,0.523,0.943,"rock, emo",The Right to Write Me Off,Amber Pacific
+M132,TRMXAVE12903CF4050,labeled,cang_thang,cang_thang,0.6578043450703165,tag,0.191,0.648,"metalcore, symphonic_metal",The Coldest Rain,Diecast
+M133,TRRJOUH128F42AE294,conflict,,nang_dong,0.40033419454724734,model,0.784,0.576,"electronic, 80s, industrial, new_wave, synthpop",Effigy (I'm Not An),Ministry
+M134,TRCTVCP128F92D1823,no_emotion_tag,,cang_thang,0.6838015687417079,model,0.193,0.858,indie_rock,Circulation,Deerhunter
+M135,TRGIBPU128E0789A01,no_emotion_tag,,buon,0.3746534804404198,model,0.255,0.763,"rock, alternative, alternative_rock, hard_rock",Father's Son,3 Doors Down
+M136,TRCRFWA128F149A77E,conflict,,nang_dong,0.8213111590780099,model,0.888,0.865,"electronic, german, idm, ska",Actionist Respoke,Mouse on Mars
+M137,TRQMKAA128F426474F,no_emotion_tag,,thu_gian,0.7337340372611291,model,0.403,0.315,"rock, alternative_rock, hard_rock, grunge",Tired Of You,Foo Fighters
+M138,TRSEHIK128F4237075,labeled,vui,vui,0.7229052680681833,tag,0.206,0.132,"soul, funk, 70s, rnb",If It's Magic,Stevie Wonder
+M139,TRTLVSS128E0784AD1,labeled,thu_gian,thu_gian,0.6715567287273444,tag,0.143,0.44,"electronic, ambient, chillout, trip_hop, electro, downtempo",Oompa Radar,Goldfrapp
+M140,TRRVAPH128F14A376F,conflict,,buon,0.6392568112263343,model,0.119,0.662,doom_metal,Stigma,Ufomammut
+M141,TRRIUHG128F424364B,no_emotion_tag,,cang_thang,0.9841282752795909,model,0.116,0.99,"experimental, progressive_rock, psychedelic, psychedelic_rock",Aberinkula,The Mars Volta
+M142,TRCAPRF128F4256F2A,conflict,,cang_thang,0.6242345345891556,model,0.29,0.789,"gothic_metal, gothic, symphonic_metal",Fly Like the Wind,Imperia
+M143,TRPJRSO128F425EA31,labeled,vui,vui,0.682419331888132,tag,0.547,0.616,"pop, female_vocalists, soul, rnb",I'm You,Leona Lewis
+M144,TROFJJY128F428E19B,conflict,,nang_dong,0.6899166857167018,model,0.611,0.984,ska,Esquirol,Ska-P
+M145,TRASBRY128E0793FB0,labeled,nang_dong,nang_dong,0.7028369451143309,tag,0.604,0.989,drum_and_bass,Mad Cat,Roni Size
+M146,TRTNGWT128F42B921F,conflict,,thu_gian,0.7161765908475113,model,0.577,0.235,"ambient, instrumental, classical, piano, new_age",The Blue Notebooks,Max Richter
+M147,TRCFGVQ128F1452029,conflict,,vui,0.4644280229049878,model,0.769,0.624,"electronic, house, trip_hop",Party Weirdo,Moloko
+M148,TRQGWKV128F14844CE,no_emotion_tag,,buon,0.3291423041532036,model,0.359,0.559,progressive_rock,The Pimp and the Priest,The Dear Hunter
+M149,TRRGYCY128F92F90D9,no_emotion_tag,,thu_gian,0.4690670502411432,model,0.452,0.646,"indie, experimental, psychedelic, 00s, idm, avant_garde",Street Flash,Animal Collective
+M150,TRDTXKJ128F9300E91,labeled,thu_gian,thu_gian,0.6844711932044835,tag,0.0341,0.745,"ambient, folk",Wake Skadi,Hagalaz' Runedance
+M151,TRFDGAR12903CD08D6,no_emotion_tag,,vui,0.5165717648990273,model,0.931,0.845,,Karasu,Quarion
+M152,TRPILRT12903CE794D,labeled,cang_thang,cang_thang,0.9823118036631842,tag,0.139,0.926,black_metal,Det som var Haukareid,Windir
+M153,TRXYKGL128F425B717,conflict,,buon,0.5189868280650359,model,0.0395,0.282,"electronic, ambient, experimental, instrumental, post_rock",K/Half Noise,múm
+M154,TRFHMAV128F9301082,conflict,,cang_thang,0.8523761367136204,model,0.475,0.991,"alternative, punk, punk_rock, american",Something I Call Personality,New Found Glory
+M155,TRHRFRI128F14A94EC,conflict,,vui,0.5021417262415221,model,0.716,0.544,"indie, 80s, new_wave, post_punk, indie_pop, britpop",Paint a Vulgar Picture,The Smiths
+M156,TRSZANB128F931C2DD,labeled,thu_gian,thu_gian,0.8348040170154892,tag,0.209,0.851,"jazz, lounge",Suomi Finland,Jaga Jazzist
+M157,TRFSOIF128F427BF79,no_emotion_tag,,nang_dong,0.4197847653598521,model,0.757,0.894,"rock, classic_rock, 70s",Rosalita (Come Out Tonight),Bruce Springsteen
+M158,TRWHOVY128F42B4556,labeled,nang_dong,nang_dong,0.4285528456333241,tag,0.598,0.922,"punk, punk_rock, ska",Whisper in Time,Bad Religion
+M159,TRVAXHF128F931FB04,no_emotion_tag,,buon,0.5242477316437949,model,0.366,0.873,"female_vocalists, pop_rock",Until You're Mine,Demi Lovato
+M160,TRIXZUF128F428A82E,conflict,,cang_thang,0.6743662965252272,model,0.482,0.899,"punk, punk_rock",Dinosaurs Will Die,NOFX
+M161,TRRPIZJ128F92C493D,conflict,,buon,0.3542660430079407,model,0.28,0.528,"rock, female_vocalists, alternative_rock, punk, oldies",Privilege (Set Me Free),Patti Smith
+M162,TRHXJWW128F931A553,labeled,thu_gian,thu_gian,0.7460421188956886,tag,0.0768,0.599,"electronic, jazz, ambient, chillout, trip_hop, downtempo, lounge, chill",All Things to All Men,The Cinematic Orchestra
+M163,TRXZLWV128F4286512,conflict,,cang_thang,0.7104311795377183,model,0.306,0.823,ska,Clear Channel (Fuck Off!),Leftöver Crack
+M164,TRFILNV128F423D10E,conflict,,thu_gian,0.4807013927395584,model,0.708,0.571,"indie, indie_pop, noise, mellow",Nice Things That Look Good,Mates of State
+M165,TRCPMZB12903CEC4AD,no_emotion_tag,,vui,0.7104867224059213,model,0.734,0.44,"experimental, psychedelic_rock",Hey Boy,Os Mutantes
+M166,TRCIXZO128F1485B69,no_emotion_tag,,vui,0.43834685383825456,model,0.649,0.598,britpop,Villa Rosie,Blur
+M167,TRSRYSD128F4263A08,labeled,thu_gian,thu_gian,0.9763501664985885,tag,0.404,0.114,"rock, classic_rock, acoustic",Alright For Now,Tom Petty
+M168,TRLESSD128F424DA94,no_emotion_tag,,cang_thang,0.8761358333505799,model,0.277,0.937,"experimental, avant_garde",Bring Back the Apocalypse,Sleepytime Gorilla Museum
+M169,TRYCSMK12903CCBDAE,conflict,,thu_gian,0.5089314819372881,model,0.9,0.727,"electronic, 80s, british, new_wave, beautiful, synthpop",See You,Depeche Mode
+M170,TRIPUTS12903CE8B2F,no_emotion_tag,,nang_dong,0.563009908577654,model,0.535,0.654,,Detroit Falls,Pariah
+M171,TRIPHTM12903CAF5F2,conflict,,cang_thang,0.6354691022969555,model,0.408,0.945,"indie, punk, punk_rock, emo, love",The Party Scene,All Time Low
+M172,TRBFEGG128F429E5B1,conflict,,thu_gian,0.4929053834751877,model,0.186,0.535,"classical, soundtrack",Floe,Philip Glass
+M173,TRHNGNZ128F92E54E8,no_emotion_tag,,thu_gian,0.5007159882160336,model,0.599,0.612,soundtrack,Me Duele Amarte,Reik
+M174,TRHUHGH128F421C4E6,labeled,cang_thang,cang_thang,0.8125405284134029,tag,0.42,0.967,"metal, thrash_metal, progressive_metal",Viisi laukausta päähän,Stam1na
+M175,TRCOUEF128F426CA47,labeled,buon,buon,0.6951035021387701,tag,0.194,0.851,"rock, alternative, alternative_rock, american, emo, beautiful",Chase This Light,Jimmy Eat World
+M176,TROIMVV128F42873FC,labeled,cang_thang,cang_thang,0.7333838368819168,tag,0.323,0.977,"female_vocalists, hardcore, emo, post_hardcore, screamo",Only Holding On,Eyes Set to Kill
+M177,TRIFKML128F931A598,labeled,buon,buon,0.8213998228159785,tag,0.0398,0.189,post_rock,Optimal Region Selector,The Evpatoria Report
+M178,TRWESNW128F423DD62,labeled,cang_thang,cang_thang,0.9269584004499033,tag,0.395,0.986,"black_metal, death_metal, thrash_metal, melodic_death_metal, gothic_metal, swedish",Skin After Skin,Soilwork
+M179,TRKWICP128E078A9FB,conflict,,vui,0.5321538556085619,model,0.77,0.383,"rock, pop, classic_rock, singer_songwriter, psychedelic, 60s",Barnyard,Brian Wilson
+M180,TRYWGLU128E0784662,conflict,,vui,0.8273027079008317,model,0.828,0.387,hip_hop,What's Happenin',Young Money

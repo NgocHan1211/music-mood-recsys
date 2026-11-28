@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gán nhãn tâm trạng</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Bố cục: một màn hình — thanh tiến độ trên, thẻ bài ở giữa, mặt phẳng valence×energy làm bộ chọn, bản đồ 180 ô dưới cùng. */
+:root{
+  --bg:#f4f4f6; --panel:#ffffff; --panel-2:#ececf1; --line:#d6d6de;
+  --fg:#1b1b22; --fg-dim:#5c5c6b; --fg-faint:#8d8d9c;
+  --accent:#4a46c9; --accent-soft:#e6e5fa;
+  --vui:#b7791f; --buon:#2f5fd0; --thu_gian:#1f7a6c; --nang_dong:#c05621; --cang_thang:#b02a37; --khong_ro:#73738a;
+  --ok:#1f7a4d; --warn:#9a5b00;
+  --font-display:'Space Grotesk','Helvetica Neue',sans-serif;
+  --font-body:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#15151a; --panel:#1e1e26; --panel-2:#272731; --line:#363642;
+  --fg:#ececf2; --fg-dim:#a8a8b8; --fg-faint:#73738a;
+  --accent:#9d99ff; --accent-soft:#2b2a52;
+  --vui:#e0a63c; --buon:#7d9bf2; --thu_gian:#4fc0ac; --nang_dong:#ef8b50; --cang_thang:#f0737f; --khong_ro:#9696ab;
+  --ok:#5bc98c; --warn:#e0a63c;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#15151a; --panel:#1e1e26; --panel-2:#272731; --line:#363642;
+  --fg:#ececf2; --fg-dim:#a8a8b8; --fg-faint:#73738a;
+  --accent:#9d99ff; --accent-soft:#2b2a52;
+  --vui:#e0a63c; --buon:#7d9bf2; --thu_gian:#4fc0ac; --nang_dong:#ef8b50; --cang_thang:#f0737f; --khong_ro:#9696ab;
+  --ok:#5bc98c; --warn:#e0a63c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+button{font:inherit;cursor:pointer;color:inherit}
+input{font:inherit;color:inherit}
+
+/* ---- thanh trên ---- */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-block:12px 10px;margin-bottom:18px}
+.top-row{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+h1{font:700 17px/1.2 var(--font-display);margin:0;letter-spacing:-0.01em;flex:0 0 auto}
+.who{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--fg-dim)}
+.who input{width:110px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.count{font:500 13px/1 var(--font-mono);color:var(--fg-dim);font-variant-numeric:tabular-nums;margin-left:auto}
+.count b{color:var(--fg);font-size:15px}
+.bar{height:5px;background:var(--panel-2);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 12px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:13px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.btn-primary:hover{color:#fff;filter:brightness(1.08)}
+
+/* ---- cảnh báo ---- */
+.rules{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13.5px;color:var(--fg-dim)}
+.rules b{color:var(--fg)}
+.rules ul{margin:8px 0 0;padding-left:20px}
+.rules li{margin:3px 0}
+.rules button{float:right;border:0;background:0;color:var(--fg-faint);font-size:12px;padding:0 0 0 10px}
+
+/* ---- thẻ bài ---- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
+.card-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.chip{font:500 12px/1 var(--font-mono);color:var(--fg-faint);border:1px solid var(--line);border-radius:5px;padding:4px 7px;letter-spacing:.04em}
+.title{font:500 23px/1.25 var(--font-display);margin:6px 0 2px;letter-spacing:-0.01em;text-wrap:balance;min-width:0;overflow-wrap:anywhere}
+.artist{color:var(--fg-dim);font-size:15px;margin:0 0 14px;overflow-wrap:anywhere}
+audio{width:100%;height:38px;display:block}
+.heard{display:flex;align-items:center;gap:10px;margin-top:10px;font:500 12.5px/1 var(--font-mono);color:var(--fg-faint);font-variant-numeric:tabular-nums}
+.heard.enough{color:var(--ok)}
+.heard a{color:var(--fg-faint);margin-left:auto;font-family:var(--font-body);font-size:12.5px}
+
+/* ---- mặt phẳng chọn nhóm ---- */
+.plane-wrap{position:relative;margin:4px 0 14px}
+.axis-e{position:absolute;left:-2px;top:0;bottom:0;width:14px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;font:500 10px/1 var(--font-mono);color:var(--fg-faint);letter-spacing:.06em}
+.axis-e span{writing-mode:vertical-rl;transform:rotate(180deg)}
+.plane{position:relative;height:330px;margin-left:20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.plane::before,.plane::after{content:"";position:absolute;background:var(--line);opacity:.55}
+.plane::before{left:50%;top:0;bottom:0;width:1px}
+.plane::after{top:50%;left:0;right:0;height:1px}
+.axis-v{display:flex;justify-content:space-between;margin:6px 0 0 20px;font:500 10px/1 var(--font-mono);color:var(--fg-faint);letter-spacing:.06em}
+.g{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 11px;min-width:104px;border:1.5px solid var(--line);border-radius:9px;background:var(--panel-2);text-align:left;transition:transform .1s,box-shadow .12s}
+.g:hover{transform:translate(-50%,-50%) scale(1.04);box-shadow:0 3px 14px rgba(0,0,0,.14)}
+.g .k{font:500 10px/1 var(--font-mono);color:var(--fg-faint)}
+.g .n{font:600 14px/1.1 var(--font-body)}
+.g[data-g] .n{color:var(--c)}
+.g.sel{background:var(--c);border-color:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 26%,transparent)}
+.g.sel .n,.g.sel .k{color:#fff}
+.glist{display:none;flex-direction:column;gap:8px;margin-bottom:14px}
+.glist .g{position:static;transform:none;width:100%;min-width:0;flex-direction:row;align-items:center;gap:10px;padding:11px 13px}
+.glist .g:hover{transform:none}
+.glist .g .h{font-size:12.5px;color:var(--fg-dim);margin-left:auto;text-align:right}
+.glist .g.sel .h{color:rgba(255,255,255,.85)}
+.hint{font-size:12.5px;color:var(--fg-dim);margin:0 0 14px;min-height:1.5em}
+
+/* ---- phụ ---- */
+.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+.lab{font:500 11px/1 var(--font-mono);color:var(--fg-faint);letter-spacing:.07em;text-transform:uppercase}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{padding:6px 11px;border:0;background:var(--panel);font-size:13px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.note{flex:1 1 220px;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+.sub{display:flex;gap:6px;flex-wrap:wrap}
+.sub button{padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:12.5px;color:var(--fg-dim)}
+.sub button.on{border-color:var(--c);color:var(--c);font-weight:600;background:var(--accent-soft)}
+
+/* ---- điều hướng ---- */
+.nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0 22px}
+.keys{margin-left:auto;font:400 11.5px/1.7 var(--font-mono);color:var(--fg-faint);text-align:right}
+kbd{font:500 11px/1 var(--font-mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:2px 4px;background:var(--panel)}
+
+/* ---- bản đồ 180 ô ---- */
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(22px,1fr));gap:4px;margin-top:10px}
+.cell{aspect-ratio:1;border:1px solid var(--line);border-radius:4px;background:var(--panel);font:500 9px/1 var(--font-mono);color:var(--fg-faint);padding:0;display:flex;align-items:center;justify-content:center}
+.cell[data-g]{background:var(--c);border-color:var(--c);color:#fff}
+.cell.now{outline:2px solid var(--fg);outline-offset:1px}
+h2{font:700 13px/1.2 var(--font-display);margin:26px 0 2px;letter-spacing:.02em;text-transform:uppercase;color:var(--fg-dim)}
+.sm{font-size:12.5px;color:var(--fg-faint);margin:4px 0 0}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);max-width:min(640px,92vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{width:100%;height:220px;font:400 12px/1.5 var(--font-mono);border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);padding:10px;resize:vertical}
+.done{background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:14px}
+@media (max-width:620px){
+  .plane-wrap,.axis-v{display:none}
+  .glist{display:flex}
+  .title{font-size:20px}
+  .keys{display:none}
+  .count{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <div class="top-row">
+    <h1>Gán nhãn tâm trạng</h1>
+    <label class="who">tên bạn <input id="who" placeholder="nhu" autocomplete="off" spellcheck="false"></label>
+    <div class="acts">
+      <button class="btn btn-primary" id="save">Lưu file CSV</button>
+      <button class="btn" id="show">Hiện CSV</button>
+      <button class="btn" id="load">Nạp lại CSV cũ</button>
+      <input type="file" id="file" accept=".csv" hidden>
+    </div>
+    <div class="count"><b id="n">0</b> / 180 &nbsp;·&nbsp; <span id="left"></span></div>
+  </div>
+  <div class="bar"><i id="fill"></i></div>
+</div>
+
+<div class="rules" id="rules">
+  <button onclick="document.getElementById('rules').hidden=true">ẩn</button>
+  <b>Ba quy tắc không được phá</b>
+  <ul>
+    <li><b>Nghe trước đã</b> — ít nhất 20 giây. Đừng đoán theo tên bài hay tên nghệ sĩ.</li>
+    <li><b>Không tra cứu, không bàn với hai người kia</b> cho đến khi cả ba gán xong. Trùng nhau vì bàn nhau thì số đồng thuận thành vô nghĩa.</li>
+    <li><b>Đừng mở</b> <code>KEY_KHONG_MO_TRUOC_KHI_GAN.csv</code>.</li>
+  </ul>
+  <div style="margin-top:9px"><b>Bẫy hay gặp:</b> <b>buồn</b> không có nghĩa là nhạc nhẹ. Trong dữ liệu này nhóm buồn có energy trung bình <b>0,589</b>, cao hơn nhóm thư giãn (<b>0,478</b>) — bài gào thét mà sắc thái là mất mát thì vẫn là <b>buồn</b>. Nhóm yên tĩnh là <b>thư giãn</b>.</div>
+</div>
+
+<div class="done" id="done" hidden></div>
+
+<div class="card">
+  <div class="card-head">
+    <span class="chip" id="id">M000</span>
+    <span class="chip" id="pos">bài 1 / 180</span>
+  </div>
+  <h2 class="title" id="name" style="text-transform:none;color:var(--fg);margin-top:6px">—</h2>
+  <p class="artist" id="artist">—</p>
+  <audio id="player" controls preload="none"></audio>
+  <div class="heard" id="heard">đã nghe 0:00 <a id="spotify" href="#" target="_blank" rel="noopener">mở trên Spotify</a></div>
+</div>
+
+<div class="plane-wrap">
+  <div class="axis-e"><span>energy cao</span><span>energy thấp</span></div>
+  <div class="plane" id="plane"></div>
+</div>
+<div class="axis-v"><span>valence thấp →</span><span>← valence cao</span></div>
+<div class="glist" id="glist"></div>
+<p class="hint" id="hint"></p>
+
+<div class="row">
+  <span class="lab">độ tự tin</span>
+  <div class="seg" id="conf">
+    <button data-c="1">1 đoán</button><button data-c="2">2 khá chắc</button><button data-c="3">3 chắc</button>
+  </div>
+  <span class="lab">nghe được?</span>
+  <div class="seg" id="ok">
+    <button data-ok="1">có</button><button data-ok="0">không</button>
+  </div>
+</div>
+<div class="row">
+  <span class="lab">nhóm phụ</span>
+  <div class="sub" id="sub"></div>
+</div>
+<div class="row">
+  <span class="lab">ghi chú</span>
+  <input class="note" id="note" placeholder="chỉ ghi khi thấy cần, ví dụ: hai nửa bài khác hẳn nhau" autocomplete="off">
+</div>
+
+<div class="nav">
+  <button class="btn" id="prev">← Bài trước</button>
+  <button class="btn" id="next">Bài sau →</button>
+  <button class="btn" id="jump">Tới bài chưa gán</button>
+  <div class="keys">
+    <kbd>1</kbd>–<kbd>5</kbd> nhóm · <kbd>6</kbd> không rõ · <kbd>Shift</kbd>+số nhóm phụ<br>
+    <kbd>space</kbd> phát/dừng · <kbd>r</kbd> nghe lại · <kbd>q w e</kbd> độ tự tin · <kbd>x</kbd> không nghe được<br>
+    <kbd>↵</kbd> bài sau · <kbd>←</kbd> <kbd>→</kbd> chuyển bài
+  </div>
+</div>
+
+<h2>Bản đồ 180 bài</h2>
+<p class="sm">Màu = nhóm đã chọn. Bấm vào ô để nhảy tới bài đó.</p>
+<div class="map" id="map"></div>
+
+<h2>Xong thì làm gì</h2>
+<p class="sm">Bấm <b>Lưu file CSV</b>, file tải về tên <code>nhan_&lt;tên&gt;.csv</code>. Đặt nó vào thư mục <code>mood-model/annotation/</code> (ghi đè file trống cùng tên). Khi cả ba người đã có file, chạy <code>python -m src.mood.score_agreement</code>.</p>
+<p class="sm">Nhãn tự lưu trong trình duyệt sau mỗi lần bấm, nhưng đó chỉ là bộ nhớ tạm — xoá dữ liệu trang hoặc dùng cửa sổ ẩn danh là mất. Cứ khoảng 30 bài nên bấm <b>Lưu file CSV</b> một lần cho chắc.</p>
+
+<dialog id="dlg">
+  <h2 style="margin-top:0">CSV</h2>
+  <p class="sm" id="dlg-sm">Chọn hết rồi copy, dán vào file <code>annotation/nhan_&lt;tên&gt;.csv</code>.</p>
+  <textarea id="dlg-ta" readonly></textarea>
+  <div class="acts" style="margin-top:12px">
+    <button class="btn btn-primary" id="dlg-copy">Copy</button>
+    <button class="btn" onclick="document.getElementById('dlg').close()">Đóng</button>
+  </div>
+</dialog>
+
+</div>
+<script>
+"use strict";
+const TRACKS = [{"id": "M001", "url": "https://p.scdn.co/mp3-preview/d2ebb6188ff18e53ae5c3501f4a4b57ad7e5ed32?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0ekCt0mm17QsTxO1Wp5rHx", "name": "Royal Gregory", "artist": "Holy Fuck"}, {"id": "M002", "url": "https://p.scdn.co/mp3-preview/83bf713c16fb578c6168f0a8a0d5edb07b2e51b5?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/7wwLxmUVLCfySaJ0fdyelI", "name": "Bitches", "artist": "Mindless Self Indulgence"}, {"id": "M003", "url": "https://p.scdn.co/mp3-preview/144e5cf69cce37d1e7195e2ed4a6224e07c81716?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0stXB0RIAx1qpunXUcGb1V", "name": "Nachtschatten", "artist": "Lacrimosa"}, {"id": "M004", "url": "https://p.scdn.co/mp3-preview/256263b095c3f441fd15a1dafa55d7e026267bcb?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4N5x8PfKtVhSlqPoE4id0u", "name": "If We Want To", "artist": "Big D And The Kids Table"}, {"id": "M005", "url": "https://p.scdn.co/mp3-preview/7297ded4c65b7cd50133e39003c4f3f80be2d90d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0YQQqfAyYCkniDNoKEp2ZB", "name": "I Don't Owe You Anything", "artist": "The Smiths"}, {"id": "M006", "url": "https://p.scdn.co/mp3-preview/6c8ff3d28f800347176f79e473b612392767b7fe?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/48bk2AUPHxf0gTWrmE5VH6", "name": "Somewhere On Fullerton", "artist": "Allister"}, {"id": "M007", "url": "https://p.scdn.co/mp3-preview/0f14b9da96984866ab4f968177247ca44ce5c933?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1dlvJVzqW8BKVQauN8d3o5", "name": "I'm Yours / Somewhere Over The Rainbow", "artist": "Straight No Chaser"}, {"id": "M008", "url": "https://p.scdn.co/mp3-preview/5c70dc1c17c9b94e2db974dd6d30138fad0452e0?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0E32ssQUysRfsgzX0tvOIk", "name": "Free Your Mind", "artist": "En Vogue"}, {"id": "M009", "url": "https://p.scdn.co/mp3-preview/52619b8d39bc523860a18238497ebd5efd0ccda3?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0FAgi1qBd94gFW2QdEx3cy", "name": "On Broadway", "artist": "George Benson"}, {"id": "M010", "url": "https://p.scdn.co/mp3-preview/0a45178c4728b0eb4b25574c2c6e5508230cc793?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/7G7qAvwD7kGBRnY9D1G0o3", "name": "Avratz", "artist": "Infected Mushroom"}, {"id": "M011", "url": "https://p.scdn.co/mp3-preview/752b83b1e5352098c22ddc1b34578f5501cf0e64?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5Aw4dLFH6qMNpYlTwbovjQ", "name": "Babies With Guns", "artist": "Aesop Rock"}, {"id": "M012", "url": "https://p.scdn.co/mp3-preview/9233b92197520ab56307550cbf5e6c96df134c36?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1L4U5ikDKnskqKUpe1Knzc", "name": "Someone Else's Arms", "artist": "MAE"}, {"id": "M013", "url": "https://p.scdn.co/mp3-preview/3babe134c2836b675cc7c2a0ea8781df31cb9cd0?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1rNb3IALlxfkd9EtKlmamd", "name": "Scourge", "artist": "Sleep"}, {"id": "M014", "url": "https://p.scdn.co/mp3-preview/55ff290499c585a03909c6e5da948e918936a977?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0HWiGEcB2MQsPwLAaZAG1a", "name": "Hold Me So Tight", "artist": "Sally Shapiro"}, {"id": "M015", "url": "https://p.scdn.co/mp3-preview/07fabdd9ddfb47bd1bdf5d35bc5bc727a08c5d46?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/09VT86T4k4kkuVYcwsDvhB", "name": "My Name", "artist": "Sean Paul"}, {"id": "M016", "url": "https://p.scdn.co/mp3-preview/1824e1b8eef1061b467db3ee3015f4fc7ecd339e?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/06qLGVuwfNgyj72TXtQMu4", "name": "The Great Exchange", "artist": "Thrice"}, {"id": "M017", "url": "https://p.scdn.co/mp3-preview/ac7a24d7eae7227af51e38bd962bfb03d597f9a2?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1YubuwhR6zW0eFZdTeLSsc", "name": "Lewis (Mistreated)", "artist": "Radiohead"}, {"id": "M018", "url": "https://p.scdn.co/mp3-preview/f78d4b5941e39aab6b5b4bc32c0fda6bf2dcd8cb?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2ToCJCZV5a6KMiK57NrVtu", "name": "Sadness", "artist": "Porno for Pyros"}, {"id": "M019", "url": "https://p.scdn.co/mp3-preview/e43181f919941932de5ee012c51723ea7c87c7b9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1UMHdsGt5PoiGVWwij70KO", "name": "Don Gon Do It", "artist": "The Rapture"}, {"id": "M020", "url": "https://p.scdn.co/mp3-preview/af3ed7962b530b7187d1312a4ea58f00eb2ef39a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4GHoAys8qrGg1uQpEujjdY", "name": "Where's Summer B.?", "artist": "Ben Folds Five"}, {"id": "M021", "url": "https://p.scdn.co/mp3-preview/5ac9f529abd9d402de050d455ca6dd4e97fa2980?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3Yks0CrboAxArOGgNhWY0O", "name": "Ain't No Good", "artist": "Cake"}, {"id": "M022", "url": "https://p.scdn.co/mp3-preview/6991909ff974b8233cad7b62102848a6f064740c?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/090qTKhS89FrN53eTQ4jKg", "name": "Bad Up Your Betterness", "artist": "The Presets"}, {"id": "M023", "url": "https://p.scdn.co/mp3-preview/09cd58a910528c8c02aad24f60b00f4074bf82cf?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0isqUNpXWbkiAD5oXcJa6v", "name": "Eu Sei", "artist": "Papas Da Língua"}, {"id": "M024", "url": "https://p.scdn.co/mp3-preview/6e5273464113dd56a50b412c3ca00918e78b04b5?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0TszxVtDitheIqrsg9npnO", "name": "Sexual Eruption", "artist": "Snoop Dogg"}, {"id": "M025", "url": "https://p.scdn.co/mp3-preview/71f6bc1679b85f7e617e2ab1f8dcea740a51be5c?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2wkqOtEBWHemM1KXaImr0L", "name": "Burying Luck", "artist": "Minus the Bear"}, {"id": "M026", "url": "https://p.scdn.co/mp3-preview/aae56ea1f4136c5f0b14f9f3daeb56ffdbe12cb2?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4etk0n2U1adzIr1iuu5yeN", "name": "Fifth Ave", "artist": "Gold Panda"}, {"id": "M027", "url": "https://p.scdn.co/mp3-preview/66605c7ef359df63f2be1be131e73f030ae7c48e?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4xqTq5yjI5BNcU8Hkqzxjr", "name": "Parlay", "artist": "Hans Zimmer"}, {"id": "M028", "url": "https://p.scdn.co/mp3-preview/7f320a79d608e241fbe110e298725e3503c9e073?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2A0Na0DPeuCiqImirKxfGF", "name": "Heartbroken, In Disrepair", "artist": "Dan Auerbach"}, {"id": "M029", "url": "https://p.scdn.co/mp3-preview/612053cfb7ea6333cca21b9c1b376bca16ed41b1?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/06B5Fy1OL7NyaUm3QiQyl1", "name": "Rikarda", "artist": "Oliver Huntemann"}, {"id": "M030", "url": "https://p.scdn.co/mp3-preview/5bf93c7cf3b7848ec4d0af6892cd5782865db75f?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/00RufNRVs4u4WZpCeVnVTv", "name": "Princess Leia's Theme", "artist": "John Williams"}, {"id": "M031", "url": "https://p.scdn.co/mp3-preview/d922c702b093ef3182e0b2e0c80ac007388e57ac?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2sYpN8YkwCv3BKdBvOWnPO", "name": "Hellfire", "artist": "1349"}, {"id": "M032", "url": "https://p.scdn.co/mp3-preview/9f465041afa82e7458898b763bf2147dcb2d42cd?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1iLBIHCMe6wRB2PIb0Tgcx", "name": "Blinded By The Sun", "artist": "Everlast"}, {"id": "M033", "url": "https://p.scdn.co/mp3-preview/5e858b63ec313108081cbf0e99d67eb3ec9f4e47?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/31FF2EEfDrjlGMXvsLyDOL", "name": "Two Worlds Collide", "artist": "Demi Lovato"}, {"id": "M034", "url": "https://p.scdn.co/mp3-preview/3859547944f57cfb7b996f6551148c9467889d4b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/01Yj2MCGpjZs34PRlGgz4K", "name": "Hips Don't Lie", "artist": "Shakira"}, {"id": "M035", "url": "https://p.scdn.co/mp3-preview/11f876488c84aa3ece1fd8e06d104a14109687d7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/11R0Wyq7eaxXsWbxfO4Ge7", "name": "Love Bites", "artist": "Def Leppard"}, {"id": "M036", "url": "https://p.scdn.co/mp3-preview/64d08002e432aafa72d72d80233a4e61ebb6d13e?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0xvVQlxxjvuVRa6HB3prZs", "name": "The Man I Killed", "artist": "NOFX"}, {"id": "M037", "url": "https://p.scdn.co/mp3-preview/b8505ba731c572c27a6e0e28a96b0ef6b10eccf5?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0Tm4c90dU2XqOBO8V1gIUQ", "name": "Better Get a Broom!", "artist": "Hella"}, {"id": "M038", "url": "https://p.scdn.co/mp3-preview/cde21a67e3322a3d673a77f4b7f7e9a839224a74?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2Vk8RetjAVVLlUcdhahfCq", "name": "Analog Worms Attack", "artist": "Mr. Oizo"}, {"id": "M039", "url": "https://p.scdn.co/mp3-preview/eb624e76b6bb514568cdc08d50634600f5d6b4e1?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0nGj4M2ti7sTIPXU5exaxD", "name": "You, You're Awesome", "artist": "Do Make Say Think"}, {"id": "M040", "url": "https://p.scdn.co/mp3-preview/2e08cf6d62e8d7d10a72869a6970c153833571b0?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2Bj4ebhWQi5JU1PLylP95a", "name": "Far Gone and Out", "artist": "The Jesus and Mary Chain"}, {"id": "M041", "url": "https://p.scdn.co/mp3-preview/e748c45ac657cac24a2e59a8548faf7066a8a94c?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/02mjnIVfc2dvpMPJmO2ZnH", "name": "Too Many Happy Faces", "artist": "K's Choice"}, {"id": "M042", "url": "https://p.scdn.co/mp3-preview/c25a04304faa58926a83b89dfb4be3b52e511583?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5pXqeFPdysU4p9nM5wAstM", "name": "Bury It Down Low", "artist": "RX Bandits"}, {"id": "M043", "url": "https://p.scdn.co/mp3-preview/f7a3617ad0ca81b53574c69ff1d868eed04ae5dc?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2HALUsjV3IOCogS3LeMAaK", "name": "Transcontinental", "artist": "Pedro the Lion"}, {"id": "M044", "url": "https://p.scdn.co/mp3-preview/3299d9315a620daa18c024127972b1d79c19ad6a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0Pvp0YObcjBQRueTRsjWLm", "name": "Things I Did When I Was Dead", "artist": "No Age"}, {"id": "M045", "url": "https://p.scdn.co/mp3-preview/e3533eeadb6bb3c9af5335b22a4930b09fc82579?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0SGQHmDB1tdq6eCdkDSn8v", "name": "Mariella", "artist": "Kate Nash"}, {"id": "M046", "url": "https://p.scdn.co/mp3-preview/6d0444bb6b8f260111dc8896df8de4282860ce18?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0vEi0nohyrui7xYv5f6S1m", "name": "With David Bowie", "artist": "Veruca Salt"}, {"id": "M047", "url": "https://p.scdn.co/mp3-preview/746eccaf5dc75847009b1b36875b2487b8290d1e?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2CDVFnu834lmup3GjRu7Uh", "name": "Wheel of Fortune", "artist": "Hans Zimmer"}, {"id": "M048", "url": "https://p.scdn.co/mp3-preview/693f2e0e6a663d0fd1ad558068b7776943af3471?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3ml0GdsJ9DvDESGbzXoAO3", "name": "Love and Destroy", "artist": "Franz Ferdinand"}, {"id": "M049", "url": "https://p.scdn.co/mp3-preview/4eab5bef9fcf5f8bd3c329db0096eb430b3f7f18?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1vcPKPHrRuqpZZlBdNcA1F", "name": "True To me", "artist": "Metro Station"}, {"id": "M050", "url": "https://p.scdn.co/mp3-preview/bbdc4de44baa59f7addf919930c2357fcd5ffe82?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0UBkacumtpV2cwGrBbXlSn", "name": "Batonga", "artist": "Angélique Kidjo"}, {"id": "M051", "url": "https://p.scdn.co/mp3-preview/116c21b384689748c98569bffa153bf48191f106?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/071pe4R2quopL8NfECCSD5", "name": "It's Working", "artist": "MGMT"}, {"id": "M052", "url": "https://p.scdn.co/mp3-preview/874f55b6cbc161e28ad5551c83f468f13e23af8b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3OrlqVyPRniRrPziMCPtrr", "name": "Meticulous Invagination", "artist": "Aborted"}, {"id": "M053", "url": "https://p.scdn.co/mp3-preview/2ef493103329228af83144056b671fc0aa394403?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0tscy0LCX86UFsdng663eX", "name": "Jesus Doesn't Love Me", "artist": "Dragonette"}, {"id": "M054", "url": "https://p.scdn.co/mp3-preview/5bc0f6c16b46de97b61a986380145e14f22e2c90?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0dtxURV8Ov6vBTzZGvSwBv", "name": "A Kiss to Remember", "artist": "My Dying Bride"}, {"id": "M055", "url": "https://p.scdn.co/mp3-preview/cc267af502f6d7d9f875b4642a9456aa571bb0b9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2IsknM5KEbdD04VTh15z1v", "name": "All You Ever Wanted", "artist": "The Black Keys"}, {"id": "M056", "url": "https://p.scdn.co/mp3-preview/31e1abac973cf221e9b7b48eaa96ba5abea99717?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/22ta5zKFPV0qE0O3NtY6hR", "name": "Immortal Lives Young", "artist": "Firewind"}, {"id": "M057", "url": "https://p.scdn.co/mp3-preview/3c5726f1ae5af8c4a0eb1d4168b1c78c29ea52c4?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0mfBY09RKsPclVMVmrklrn", "name": "Elephant Woman", "artist": "Blonde Redhead"}, {"id": "M058", "url": "https://p.scdn.co/mp3-preview/c77d7b08c93e3f3bce7ae3ec44c39c4ca13ad11f?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0FZrWCjmtvn9GRTHsW6BVp", "name": "To Let Myself Go", "artist": "Ane Brun"}, {"id": "M059", "url": "https://p.scdn.co/mp3-preview/23cd70645d4647330514d7b6106f3c3843c57f26?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3RUy1m2LLhDUoCRdmwnUns", "name": "Radio #2", "artist": "The Ataris"}, {"id": "M060", "url": "https://p.scdn.co/mp3-preview/01e7329d3b8de5104e891dc670b2e3393f8cd5d4?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0At4s2FkHUiilX2Ii9HYl1", "name": "Wendy Clear", "artist": "blink-182"}, {"id": "M061", "url": "https://p.scdn.co/mp3-preview/a7ea9d61fb4618dda40d18a9fd52a83dedf53cc3?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0awiprd9BQ4vXukC5aD6Nw", "name": "Eres Un@ Mas", "artist": "Ska-P"}, {"id": "M062", "url": "https://p.scdn.co/mp3-preview/d99a063ea9db0c2d2802df38c0b272829440b994?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0GzJI1t7EmYZiYSV6wqhEd", "name": "But I Feel Good", "artist": "Groove Armada"}, {"id": "M063", "url": "https://p.scdn.co/mp3-preview/5da01d04ad22a390feea11e41c34a362f7bf4e9b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1CPipg1mvdQlPZ6gHgfq2P", "name": "Balu", "artist": "Kettcar"}, {"id": "M064", "url": "https://p.scdn.co/mp3-preview/fccddf55957b1f8e86a125e4c854bbda15aaa98a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1gz7LB9Yfn1IX4u389l7YA", "name": "Interstate 8", "artist": "Modest Mouse"}, {"id": "M065", "url": "https://p.scdn.co/mp3-preview/a920294129b01c322900f58e6dd92a696d04758d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/05gWbBvuJAvaewLXHYdh5D", "name": "Firmament", "artist": "The Ocean"}, {"id": "M066", "url": "https://p.scdn.co/mp3-preview/1fedc9e6ec65a01a4f100541fdb6d68d42e1c99b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2ckCEdqefxdVVw3T7tPHoo", "name": "Keep It Hid", "artist": "Dan Auerbach"}, {"id": "M067", "url": "https://p.scdn.co/mp3-preview/f6481905ac2078d2b6b47a31fdff2d49af56e284?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3Wm4OqyTUCi5koD9MUTLUL", "name": "The Right Wing", "artist": "Luomo"}, {"id": "M068", "url": "https://p.scdn.co/mp3-preview/4bd7e2d292a93f97ed82164d230413f68e480360?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/085nd22wmHaTyvGxJr4FHy", "name": "Life Ain't Always Beautiful", "artist": "Gary Allan"}, {"id": "M069", "url": "https://p.scdn.co/mp3-preview/fccd192518fca687b82d7161de9d3e8a06411acf?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0yZS0TWM4of3vbOWl4zY3o", "name": "Oh Jim", "artist": "Lou Reed"}, {"id": "M070", "url": "https://p.scdn.co/mp3-preview/a0387edb7f1a93d0392c13c2de101c8fa02aaf2c?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/09mVmenNiIiqRtPSVBpmYn", "name": "More You Understand", "artist": "Howie Day"}, {"id": "M071", "url": "https://p.scdn.co/mp3-preview/cb029a4a91e6f8b86bc7e1fb757b4f7c565ec5ee?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/02LSqfb1gI0qAxHVVZeLpa", "name": "Valse romantique", "artist": "Claude Debussy"}, {"id": "M072", "url": "https://p.scdn.co/mp3-preview/d3e979a2903bb9f7f8f16513b308bee276ba3412?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0ltA0GkQPjMWGAtELvP0Xs", "name": "I Wanna Be Your Man", "artist": "The Rolling Stones"}, {"id": "M073", "url": "https://p.scdn.co/mp3-preview/cee5f10109f449f8ee732ebdb77541dfbfc0b849?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2SyWSu87uLSV5HH6wdsfQ7", "name": "Praying Hands", "artist": "Devo"}, {"id": "M074", "url": "https://p.scdn.co/mp3-preview/1243d8087aca186c8c6936ed685fa1ef22cb0097?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/09qmUpwojpfUn3xzDCcFxb", "name": "Electric Bear", "artist": "The Notwist"}, {"id": "M075", "url": "https://p.scdn.co/mp3-preview/306e1d368665c47a6d3bc38577c5a4966df88a02?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1Fw0jMhJ7kNdWnyjuiBHyZ", "name": "Me & My Man", "artist": "Chromeo"}, {"id": "M076", "url": "https://p.scdn.co/mp3-preview/b5b78f685b32bb0c346667df733aa561f8b64602?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5E9Z2TKN6n97zuKlRAAvhR", "name": "In Our Tears", "artist": "Secret Garden"}, {"id": "M077", "url": "https://p.scdn.co/mp3-preview/dfca6b197063ebd187afa8cfcaf45008504af3ea?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1fjPAyaeOJSk0jbTHAc7Oq", "name": "Mithridate", "artist": "The Evpatoria Report"}, {"id": "M078", "url": "https://p.scdn.co/mp3-preview/077b39801a762f5010cdd031ab2e313e54616cf7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1AbgIdyBAikdFsD048HlaN", "name": "Deadmaker", "artist": "Edguy"}, {"id": "M079", "url": "https://p.scdn.co/mp3-preview/40093b03c144564860874abe4fc69f33f982960d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3SonaciCiY2VGnQpEkKdEv", "name": "Mount Wroclai (Idle Days)", "artist": "Beirut"}, {"id": "M080", "url": "https://p.scdn.co/mp3-preview/530406538f2634bca9b4cc02e56ce79288ad6d3b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4dancSaBtSNGrBAVLl4vdY", "name": "Total Eclipse of the Moon", "artist": "Enigma"}, {"id": "M081", "url": "https://p.scdn.co/mp3-preview/fdff9468e14fed397e89793485762cc76a9424be?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0WosJrzFiIVuKctmzG2yW0", "name": "Rosemary", "artist": "Deftones"}, {"id": "M082", "url": "https://p.scdn.co/mp3-preview/af487751cee1c2a8989d70fa670d1c3989b9cb65?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5bj0Fzit2FUp3DbMZ4UNPC", "name": "I Wish I Knew (How It Would Feel To Be Free)", "artist": "The Derek Trucks Band"}, {"id": "M083", "url": "https://p.scdn.co/mp3-preview/6f67c1b4fba1c3e3036eb01ea2737c5e688272f4?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1CDqOWVW4XggJv4aSjxZLg", "name": "Too Many Dicks (On The Dance Floor)", "artist": "Flight of the Conchords"}, {"id": "M084", "url": "https://p.scdn.co/mp3-preview/a7eb93f87479519af399b652450d0e848bcc1521?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1TsOQsNt2RHy34ow8ZpMmj", "name": "Always Never", "artist": "Porcupine Tree"}, {"id": "M085", "url": "https://p.scdn.co/mp3-preview/fdf546e40b204eb8a7ed13ef0dea83d9acb47ab6?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1WHCpRZIADunlLk7H2wMeT", "name": "The Scale", "artist": "Interpol"}, {"id": "M086", "url": "https://p.scdn.co/mp3-preview/fa83588b86cc511cb399a571d486697e961047b5?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3E4VWnivtoXXNIc5cW9WZO", "name": "Happy Guy", "artist": "NOFX"}, {"id": "M087", "url": "https://p.scdn.co/mp3-preview/7ef73f33c1858c2c40955d33d6421a3da0b857fc?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0RHPoliIwT6ddbPugZNitX", "name": "Elevation", "artist": "U2"}, {"id": "M088", "url": "https://p.scdn.co/mp3-preview/e0562574b9d1ea455d8fda2ae101e39f1e4a1595?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0IvcK2NNSKGguOcTpke87q", "name": "No One Does It Like You", "artist": "Department of Eagles"}, {"id": "M089", "url": "https://p.scdn.co/mp3-preview/377dcbd40cbb011d768cca1bd4a7b1ec07e98e8f?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0hjZZRaxfrWtO30jjh0ni7", "name": "Come Closer", "artist": "Miles Kane"}, {"id": "M090", "url": "https://p.scdn.co/mp3-preview/11fe6db6b1e8217336d3103c3e002aca3d881dea?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1Gx0mtzzXljoTdHWPPz0P5", "name": "Allergic", "artist": "Miss Kittin"}, {"id": "M091", "url": "https://p.scdn.co/mp3-preview/e38448a2da5c4f601c6c404748d7365b18a0a70d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5hY2HP9WMkmC8U8vh3FqCw", "name": "Unbesiegt", "artist": "Equilibrium"}, {"id": "M092", "url": "https://p.scdn.co/mp3-preview/ea50f492fa66969ee1c8386933f692c6146831cf?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0UjviOy5iTTYFUyALT3swj", "name": "The Athlete", "artist": "Erlend Øye"}, {"id": "M093", "url": "https://p.scdn.co/mp3-preview/15932772ca4d73d937a8e3fba496f327eb18a1bd?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/01EbYf0RtAd1oNQy7VOREO", "name": "Bad Fever", "artist": "The Asteroids Galaxy Tour"}, {"id": "M094", "url": "https://p.scdn.co/mp3-preview/46b2771ee8a3a67f59b5b85dbecedc4523865868?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2sR1HJBCgrx1LQ50kRtd8u", "name": "All Your Lies", "artist": "Soundgarden"}, {"id": "M095", "url": "https://p.scdn.co/mp3-preview/cc1c18325feef78dbc3a22110f872a13147d5a8b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0KFOrOm8LLt9rFllos7tVY", "name": "The Minor Prophets", "artist": "Haste the Day"}, {"id": "M096", "url": "https://p.scdn.co/mp3-preview/9cd4d9a891f0aa8e8c821208fd70c1ed79d23347?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/03pF3TQn62xUl74ww9yQxq", "name": "Should've Said No", "artist": "Taylor Swift"}, {"id": "M097", "url": "https://p.scdn.co/mp3-preview/47b0ae3d499a4163c4ee705fd85c8f4f2996cdce?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0DgICveHEKSRfRDAk4zjxt", "name": "Fluteorgie", "artist": "Hug"}, {"id": "M098", "url": "https://p.scdn.co/mp3-preview/75b6c4b143da8e8ebeb6194e40ee898fb34ddf97?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/15C1cjXYYfT8jrIk2PQyTq", "name": "Bad From Mi Born", "artist": "Munga"}, {"id": "M099", "url": "https://p.scdn.co/mp3-preview/b22e91966650bbfd114b3a3cb8669c104e5e86cd?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0hdgZOMzhsZUuhef4T9Jnh", "name": "What Do You Go Home To?", "artist": "Explosions in the Sky"}, {"id": "M100", "url": "https://p.scdn.co/mp3-preview/2567633d88f3699d59ec414dd58801c9952364c9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/03HYtUcf8cXe6IpF5qm1Dc", "name": "After The Dance", "artist": "Marvin Gaye"}, {"id": "M101", "url": "https://p.scdn.co/mp3-preview/d25200fef1553be09247e5e683098ea5e80a9c4f?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2Iy5LvQCKLH5YwtnI88HeL", "name": "Flying Officer", "artist": "Skalpel"}, {"id": "M102", "url": "https://p.scdn.co/mp3-preview/c442ef1ff2bfbaae5bc4123c0725984a6c79c36a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/00T4B8zhYdA3tEGmu5tu26", "name": "Hunted by a Freak", "artist": "Mogwai"}, {"id": "M103", "url": "https://p.scdn.co/mp3-preview/1410e73fbb87a1b15247cc83e79ff63e11f116cb?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5JYLETsdG1dUcvJPf8hLBh", "name": "Last Songs", "artist": "Dntel"}, {"id": "M104", "url": "https://p.scdn.co/mp3-preview/d1624554698973f9b3200e7b725912cfd861ef40?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0VzQYgiu527win4zklOHv4", "name": "Transparent", "artist": "In Flames"}, {"id": "M105", "url": "https://p.scdn.co/mp3-preview/013ceccf9bdace54bc2d4e06bf228d73cdde1b83?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/00GucIRjTb1GMQPMW1j2RI", "name": "I Know What You Are", "artist": "Oi Va Voi"}, {"id": "M106", "url": "https://p.scdn.co/mp3-preview/0842dcadb245d542ac3f83b97b59082f74be34b4?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3mNTvKQekIlNRbqmARy8do", "name": "Side Of The Road", "artist": "Babyshambles"}, {"id": "M107", "url": "https://p.scdn.co/mp3-preview/afbfc2aacf60282e0d6a5cda5972ea583244fd6e?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/180G1YgwyXc5KlertycHs8", "name": "Baby I'm Yours", "artist": "Breakbot"}, {"id": "M108", "url": "https://p.scdn.co/mp3-preview/dd6f83f51448e4e72153aab1042053ab1b05ecad?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2VzExp4sjB165fcZvRe1XL", "name": "Rino's Prayer", "artist": "Leftfield"}, {"id": "M109", "url": "https://p.scdn.co/mp3-preview/2ee7c24e9144aeee7104d733f064f568e78213c7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0CVpTP7bTg79xLMRUI767n", "name": "The Mind Maelstrom", "artist": "Sirenia"}, {"id": "M110", "url": "https://p.scdn.co/mp3-preview/ac41ac468960ccf69ef5899da9d0284e1f2366c9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2EbHujj3isCSRCqkskoGUw", "name": "Buoy", "artist": "The Joy Formidable"}, {"id": "M111", "url": "https://p.scdn.co/mp3-preview/323e36779cb55666b58b13cc1b0e370cbbdf8dd4?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0GCxG3TA523q3UFSvncMAJ", "name": "Lucky Love", "artist": "Ace of Base"}, {"id": "M112", "url": "https://p.scdn.co/mp3-preview/f4bed41dfcef0175a3f36f9e8a669b3185d541f2?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1L3OiMJox2U6FnyCwYw8ga", "name": "It's Not Me", "artist": "3 Doors Down"}, {"id": "M113", "url": "https://p.scdn.co/mp3-preview/e1c28c7d0bab54fa7de01a796bd5c25d2fb193df?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4AcPIzPRIWagRcJN9q1cLz", "name": "Such a Twat", "artist": "The Streets"}, {"id": "M114", "url": "https://p.scdn.co/mp3-preview/76b9a5b604b98111015e7fbac856fdc75ec9d418?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2CVrePXtLdM5W7soliYtHm", "name": "Don't Run Our Hearts Around", "artist": "Black Mountain"}, {"id": "M115", "url": "https://p.scdn.co/mp3-preview/c5e1e8419dc108543f8ba8c62d02c16c184bd3b9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3M0btc2Q2fBEDjudqOIohX", "name": "Shiller", "artist": "Ratatat"}, {"id": "M116", "url": "https://p.scdn.co/mp3-preview/7683311c184c4905d696d67f7fe3aa72b02bd1ab?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2TAwQEdqpK6lrer6CIGoo7", "name": "This Disaster", "artist": "New Found Glory"}, {"id": "M117", "url": "https://p.scdn.co/mp3-preview/97b33bc5554d559356f1cb6001c4d65ffd4191cd?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0ubNQ9vpRGvXMy4BFGsa0H", "name": "My Worst Nightmare", "artist": "Forever the Sickest Kids"}, {"id": "M118", "url": "https://p.scdn.co/mp3-preview/54ba4d34532518c6df11d80cd0fc4bf2abcb78d9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0LSTzdnM1nROKlV2AcKDkl", "name": "The Shower Scene", "artist": "Brand New"}, {"id": "M119", "url": "https://p.scdn.co/mp3-preview/db711bb9098ffd4565a41122268572ffda5d583c?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/5P3yUXUC9rZPJPNmYGKEAz", "name": "Goner", "artist": "Twenty One Pilots"}, {"id": "M120", "url": "https://p.scdn.co/mp3-preview/2b87ab399fe242fb8981c722b39d0ab05832a0ef?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0s5328gnw8csIUZYRLzfec", "name": "That's Why You're Beautiful", "artist": "Beyoncé"}, {"id": "M121", "url": "https://p.scdn.co/mp3-preview/ab9186aa15c416c1cd5df6a151e6f206ab83a538?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/6YNR1Traxs7kbEdYYkhxV7", "name": "Shock Me", "artist": "Baroness"}, {"id": "M122", "url": "https://p.scdn.co/mp3-preview/cebad7c22ae1cfcaacc4af4ae7949f3be3752c7a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1bt6nZe33CxAovX7clyK5N", "name": "Change In The Weather", "artist": "The Concretes"}, {"id": "M123", "url": "https://p.scdn.co/mp3-preview/7d1b2c73ef36245c3df90db9adf362ba2c213e26?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0dO2DPjWMrtstURmYUOLIe", "name": "Don't You Forget It", "artist": "Allah-Las"}, {"id": "M124", "url": "https://p.scdn.co/mp3-preview/2930b5acf0c93314fcc692e2d216d59cbb7095a7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/33FBMIxXw1KpwUKQZFxgEQ", "name": "I'm Not Gonna Take This", "artist": "The Pigeon Detectives"}, {"id": "M125", "url": "https://p.scdn.co/mp3-preview/bd879d15df2f6859494af5fa34802eb8ba4eba12?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/07Af1F9BSV5MFk8AlFcROD", "name": "You Guys Want One Of These?", "artist": "The Flatliners"}, {"id": "M126", "url": "https://p.scdn.co/mp3-preview/4df8284e1d6b2b977962fbf7e6e04dcbfe8cb689?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0NqYwWYBQgexA52Wf3T9mi", "name": "Global A Go-Go", "artist": "Joe Strummer and the Mescaleros"}, {"id": "M127", "url": "https://p.scdn.co/mp3-preview/ba105728166f2efa44743a4b0d01cc625d951c68?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3HpDCk8vSpV9XxgrfUTz6l", "name": "Come Back Down", "artist": "Lifehouse"}, {"id": "M128", "url": "https://p.scdn.co/mp3-preview/87a01ef194f6507e980e941d8a274740c9a42162?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/68fnTTUO5tRZ4EQ1ozwYk7", "name": "Gray Or Blue", "artist": "Jaymay"}, {"id": "M129", "url": "https://p.scdn.co/mp3-preview/8a2c83ad0c7b24ccd733668eed9b36118afcab85?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0aReKPFH7WdjzNOsTrJJEo", "name": "Sex Toyz", "artist": "Brokencyde"}, {"id": "M130", "url": "https://p.scdn.co/mp3-preview/a7fbeb56a13ebd9fd68b1979cd1e54e864e5e269?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0H9cNqXsnSgvPPXY6ASewK", "name": "Body of Years", "artist": "Mother Mother"}, {"id": "M131", "url": "https://p.scdn.co/mp3-preview/dc2b2c382c94b446a0ef5fc3e330560508d9f3aa?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0zJROlfWeXS2Sn5JyVcD3w", "name": "The Right to Write Me Off", "artist": "Amber Pacific"}, {"id": "M132", "url": "https://p.scdn.co/mp3-preview/60733c11bb80425e35aad0569dce531acff3bde7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/08cQ2S7PjDtfRIJv9rDY4h", "name": "The Coldest Rain", "artist": "Diecast"}, {"id": "M133", "url": "https://p.scdn.co/mp3-preview/bd660e2bd5c237848b036fa5b2308807c7bc7eee?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4V6KKSNh9d9DUZ0UyPdG3z", "name": "Effigy (I'm Not An)", "artist": "Ministry"}, {"id": "M134", "url": "https://p.scdn.co/mp3-preview/124895fa0aa0ad1df975d57f31367210b863d54d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/04HIsKpC66Vlt4EbpDjO2G", "name": "Circulation", "artist": "Deerhunter"}, {"id": "M135", "url": "https://p.scdn.co/mp3-preview/d6c8b65acebcc7f3c8ca0481cc0cf2a0c49da052?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0NPETK9e8jaYGNMieGeFsd", "name": "Father's Son", "artist": "3 Doors Down"}, {"id": "M136", "url": "https://p.scdn.co/mp3-preview/dae423f7c2a6e5be9cac1166fa6bfd3d42b7c607?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1OLZeAQK5DJzefQS8vWovh", "name": "Actionist Respoke", "artist": "Mouse on Mars"}, {"id": "M137", "url": "https://p.scdn.co/mp3-preview/039be5b530a353bf906d236b5ea3a15d1571f10a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/11UCYTNMwm8tCj5Rbssfk8", "name": "Tired Of You", "artist": "Foo Fighters"}, {"id": "M138", "url": "https://p.scdn.co/mp3-preview/530151819cb6288c740ab0e0b3c0a554543d2aa4?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0BIAXUlQxIixLNpRcN8Vas", "name": "If It's Magic", "artist": "Stevie Wonder"}, {"id": "M139", "url": "https://p.scdn.co/mp3-preview/986398973dd2d3a086a486ee349c9b33073ab487?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1f20trxXqODnys2FW2Trnf", "name": "Oompa Radar", "artist": "Goldfrapp"}, {"id": "M140", "url": "https://p.scdn.co/mp3-preview/67a065114d836208c4e9fd0f65363f42ed2a4e63?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1pd9ahIz23fDLzgcAE9Kb8", "name": "Stigma", "artist": "Ufomammut"}, {"id": "M141", "url": "https://p.scdn.co/mp3-preview/9fb4eb06d0936b0af8f7e99e7d2400498efb20c0?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0gGcxqdc9eJGQZstHKbyGt", "name": "Aberinkula", "artist": "The Mars Volta"}, {"id": "M142", "url": "https://p.scdn.co/mp3-preview/573c94c6609f17bd1993f09a6f71f8427f24e8ac?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/23Jvu1bmsFKhGzXfHwAWwx", "name": "Fly Like the Wind", "artist": "Imperia"}, {"id": "M143", "url": "https://p.scdn.co/mp3-preview/4f338aab33339925e8417624d072e6f1b777bbbe?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0mB7oedz34QA0GSHhF8H2F", "name": "I'm You", "artist": "Leona Lewis"}, {"id": "M144", "url": "https://p.scdn.co/mp3-preview/f8442f8d1316fa279a6066782ca0115883a2a1a7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/28Ob24QK2L4ogDYE7uB5Aw", "name": "Esquirol", "artist": "Ska-P"}, {"id": "M145", "url": "https://p.scdn.co/mp3-preview/089d942d3b25d449ba7ea8ee04892a8ae0a79b01?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/06XUJrZGYFrPzuKaRNnFGa", "name": "Mad Cat", "artist": "Roni Size"}, {"id": "M146", "url": "https://p.scdn.co/mp3-preview/c7adf7d588382f3e7cbe4968c72ea88b94ef51eb?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/05ST29gNqPs6wqLX3YnR4T", "name": "The Blue Notebooks", "artist": "Max Richter"}, {"id": "M147", "url": "https://p.scdn.co/mp3-preview/668d44e0d4a5bfa2f2ee8b872a13ca6ce8d8dca1?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1T6pY3C09BShSv6BTeacD2", "name": "Party Weirdo", "artist": "Moloko"}, {"id": "M148", "url": "https://p.scdn.co/mp3-preview/3d32547022876b861b637e3f7e841fde82e2e550?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1YgqTUt8EXcQkpBB49vUdy", "name": "The Pimp and the Priest", "artist": "The Dear Hunter"}, {"id": "M149", "url": "https://p.scdn.co/mp3-preview/7ab1b7c0db733f30a0f346bf74fa5c1d126473d3?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1T2gnhfLwILhWSrwShEOc9", "name": "Street Flash", "artist": "Animal Collective"}, {"id": "M150", "url": "https://p.scdn.co/mp3-preview/2b6b6d503ca92443670f5d5f7a43a5ee002c430a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2AlWetcYwUdvV7BPQpnY1d", "name": "Wake Skadi", "artist": "Hagalaz' Runedance"}, {"id": "M151", "url": "https://p.scdn.co/mp3-preview/1a76415e2895553c6f64e87556aea1a8b0635d51?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/66RprFNuVAeEZeY6P6LGDo", "name": "Karasu", "artist": "Quarion"}, {"id": "M152", "url": "https://p.scdn.co/mp3-preview/9ed79529802bcc11194567d9591bc8e8e37ecac9?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/6dO0Of16eDgsVYbJSKHTsI", "name": "Det som var Haukareid", "artist": "Windir"}, {"id": "M153", "url": "https://p.scdn.co/mp3-preview/b823796fbd397be9166b0533caf38533451c5492?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1DLYgVfg7qM7puDWeY08Ct", "name": "K/Half Noise", "artist": "múm"}, {"id": "M154", "url": "https://p.scdn.co/mp3-preview/52c3ea84f32c37158f0f8e4942f3b6f71d2b79dc?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1aDzFifMJ5Yb2jcRKHWWee", "name": "Something I Call Personality", "artist": "New Found Glory"}, {"id": "M155", "url": "https://p.scdn.co/mp3-preview/5ee329488eb5e6df7d5a2a34c81a1cbb65a529e3?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0wiFI3y9oW9rtU7x9JTqH1", "name": "Paint a Vulgar Picture", "artist": "The Smiths"}, {"id": "M156", "url": "https://p.scdn.co/mp3-preview/6bef6b327c5bf8f2232ae5cb3662bbf0fb50fddf?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/42Gsz7kUeyeGNccItQByPH", "name": "Suomi Finland", "artist": "Jaga Jazzist"}, {"id": "M157", "url": "https://p.scdn.co/mp3-preview/4980fb8680cddafb530967a39720cf06ac4b956d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/032CAFAYDuPiO6hVAMNHyQ", "name": "Rosalita (Come Out Tonight)", "artist": "Bruce Springsteen"}, {"id": "M158", "url": "https://p.scdn.co/mp3-preview/3e4446dfc3e8e62176f4226f87fc03761978af5c?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2lFLXrqnWLZadvLwt4cWBR", "name": "Whisper in Time", "artist": "Bad Religion"}, {"id": "M159", "url": "https://p.scdn.co/mp3-preview/4745a1ae155ab1405d7f337fe7674f9de0d468da?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/23cHk07xyEOOobjVQCtzk8", "name": "Until You're Mine", "artist": "Demi Lovato"}, {"id": "M160", "url": "https://p.scdn.co/mp3-preview/bcd2d6143cdb497d622040c0c3aada21929fa8bc?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0LYop0ZDvCQkUPOaGvgPnk", "name": "Dinosaurs Will Die", "artist": "NOFX"}, {"id": "M161", "url": "https://p.scdn.co/mp3-preview/b99b254ee77789428c0174e3d92ca13ff4084621?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/20HbVVNkMK45qtlZ2eaAN0", "name": "Privilege (Set Me Free)", "artist": "Patti Smith"}, {"id": "M162", "url": "https://p.scdn.co/mp3-preview/1546d7d43af6f4639f464eece8368751f2a94d36?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0BOhKo9Tdt3bAiKjfSHuAu", "name": "All Things to All Men", "artist": "The Cinematic Orchestra"}, {"id": "M163", "url": "https://p.scdn.co/mp3-preview/3714c4fa81bfed0f27ff23629c30a297f34b311a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/4vqXHRX3b8o5SyMk71HPYt", "name": "Clear Channel (Fuck Off!)", "artist": "Leftöver Crack"}, {"id": "M164", "url": "https://p.scdn.co/mp3-preview/ca71314cf260b035a7dc7d2354e6e0709bc2abcb?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/7tPkCbITt8Pl73s250DVMy", "name": "Nice Things That Look Good", "artist": "Mates of State"}, {"id": "M165", "url": "https://p.scdn.co/mp3-preview/e1221ff527ac8da3cb85d97db44deebfad660c8b?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2aZUjb1RksBi5TR71jK3Or", "name": "Hey Boy", "artist": "Os Mutantes"}, {"id": "M166", "url": "https://p.scdn.co/mp3-preview/050c53a67d49ca6997ea6ce0525fe498da54fe12?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/16Lg7q7rQap7K1UIv4Cfrr", "name": "Villa Rosie", "artist": "Blur"}, {"id": "M167", "url": "https://p.scdn.co/mp3-preview/f8bf23061883f00426506f0132fb6f47d155aaa7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1ltSMXmvwdwnHcVY6tXKnB", "name": "Alright For Now", "artist": "Tom Petty"}, {"id": "M168", "url": "https://p.scdn.co/mp3-preview/009dc9e1f470ebe635f0f7f79b1eef33ffa47e83?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/24QXWHVrnhh5fJ5v6Rvsni", "name": "Bring Back the Apocalypse", "artist": "Sleepytime Gorilla Museum"}, {"id": "M169", "url": "https://p.scdn.co/mp3-preview/7ae9e28bb286615a1f20b77ad09ccf00c3e51f5a?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3jDrmVLFYjTeHuNKBBoAG9", "name": "See You", "artist": "Depeche Mode"}, {"id": "M170", "url": "https://p.scdn.co/mp3-preview/1edee4dbf130b2740dd8f49e7262d7b8947d48f0?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2jWTlbfKoHYpM1hQU6Cext", "name": "Detroit Falls", "artist": "Pariah"}, {"id": "M171", "url": "https://p.scdn.co/mp3-preview/c0b90cad2b0f583a495f33618b091708e975d911?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0KXNWL02NswmN9gDyPCPG9", "name": "The Party Scene", "artist": "All Time Low"}, {"id": "M172", "url": "https://p.scdn.co/mp3-preview/a9f984ee36362219174f6a554b4b5e80c806b80f?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1D69fo9iUBY2dNkjlpYym6", "name": "Floe", "artist": "Philip Glass"}, {"id": "M173", "url": "https://p.scdn.co/mp3-preview/fa96278c9b0a23b7b88efc4a217780e11afcbae1?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/02S68OoFtNR2k4cFBu5cEz", "name": "Me Duele Amarte", "artist": "Reik"}, {"id": "M174", "url": "https://p.scdn.co/mp3-preview/d3a640c8e7f2107d820c24d71dfae49b26f80db3?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1p0JWfCoEVldfN1PbEsaiD", "name": "Viisi laukausta päähän", "artist": "Stam1na"}, {"id": "M175", "url": "https://p.scdn.co/mp3-preview/ef7b137955a2b557b101d2cb8bcf6a811194741e?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/0JRP9CXH7UVcTnWEnbQsb6", "name": "Chase This Light", "artist": "Jimmy Eat World"}, {"id": "M176", "url": "https://p.scdn.co/mp3-preview/5e8397dafad41dbff93dc876b59519026d6761f7?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/15g8X9jRszlwS5n34z5sj5", "name": "Only Holding On", "artist": "Eyes Set to Kill"}, {"id": "M177", "url": "https://p.scdn.co/mp3-preview/59cb27b1a2d4d270d84a9bb2339f3b329c7db529?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2mNfEB7GzyIyaWajAtS6wM", "name": "Optimal Region Selector", "artist": "The Evpatoria Report"}, {"id": "M178", "url": "https://p.scdn.co/mp3-preview/2f28c41e69080ea114ec7cfb4611a8f957eb5ad2?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/1VSAzMbuUvbYgYCXm6kHGC", "name": "Skin After Skin", "artist": "Soilwork"}, {"id": "M179", "url": "https://p.scdn.co/mp3-preview/39f0caa7427e4b40a2e523f6c732dd0c8241db15?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/2FnsBGmXgtzot8QqSqGW6m", "name": "Barnyard", "artist": "Brian Wilson"}, {"id": "M180", "url": "https://p.scdn.co/mp3-preview/da482a8f184ac6046cfab3599ed2b4d7d0ad114d?cid=774b29d4f13844c495f206cafdad9c86", "sp": "https://open.spotify.com/track/3sQVd7gk9ydHxQarGcAWo6", "name": "What's Happenin'", "artist": "Young Money"}];
+const GROUPS = [{"key": "vui", "label": "Vui", "hint": "Sáng, phấn, nghe xong thấy nhẹ người", "hotkey": "1", "pos": [0.6535, 0.6428]}, {"key": "buon", "label": "Buồn", "hint": "Sắc thái mất mát, đau — KHÔNG cứ phải nhạc nhẹ", "hotkey": "2", "pos": [0.3101, 0.5893]}, {"key": "thu_gian", "label": "Thư giãn", "hint": "Êm, chậm, không kéo cảm xúc đi đâu", "hotkey": "3", "pos": [0.4024, 0.4777]}, {"key": "nang_dong", "label": "Năng động", "hint": "Dồn, muốn chuyển động, nhưng không đe dọa", "hotkey": "4", "pos": [0.4895, 0.7954]}, {"key": "cang_thang", "label": "Căng thẳng", "hint": "Gắt, dữ, bồn chồn, tối", "hotkey": "5", "pos": [0.2955, 0.8757]}];
+const COLS = ["item_id","link_nghe_30s","link_spotify","ten_bai","nghe_si",
+              "mood_chinh","mood_phu","do_tu_tin","nghe_duoc","ghi_chu"];
+const KHONG_RO = {key:"khong_ro", label:"Không rõ", hint:"Nghe xong vẫn không xếp được vào nhóm nào", hotkey:"6"};
+const ALL = GROUPS.concat([KHONG_RO]);
+const byKey = {}; ALL.forEach(g => byKey[g.key] = g);
+
+// Mặt phẳng: trải đúng khoảng centroid thật rồi chừa lề, nên khoảng cách giữa các
+// nút phản ánh khoảng cách thật giữa các nhóm.
+const VRANGE = [0.20, 0.75], ERANGE = [0.40, 0.95];
+const place = (v, e) => ({
+  left: (6 + 88 * (v - VRANGE[0]) / (VRANGE[1] - VRANGE[0])) + "%",
+  top:  (94 - 88 * (e - ERANGE[0]) / (ERANGE[1] - ERANGE[0])) + "%",
+});
+
+let state = {labels:{}, idx:0};
+let who = "";
+let heard = 0, lastT = 0;
+
+const $ = id => document.getElementById(id);
+const key = () => "moodlabel:v1:" + (who || "_");
+
+function save(){ try{ localStorage.setItem(key(), JSON.stringify(state)); }catch(e){} }
+function restore(){
+  try{
+    const raw = localStorage.getItem(key());
+    if(raw){ const d = JSON.parse(raw); state = {labels:d.labels||{}, idx:d.idx||0}; return true; }
+  }catch(e){}
+  state = {labels:{}, idx:0};
+  return false;
+}
+const cur = () => TRACKS[state.idx];
+function rec(id){
+  if(!state.labels[id]) state.labels[id] = {m:"", m2:"", c:2, ok:1, note:""};
+  return state.labels[id];
+}
+const nDone = () => TRACKS.filter(t => state.labels[t.id] && state.labels[t.id].m).length;
+
+/* ---------- dựng các nút ---------- */
+function buildButtons(){
+  const plane = $("plane"), list = $("glist"), sub = $("sub");
+  GROUPS.forEach(g => {
+    const p = place(g.pos[0], g.pos[1]);
+    const b = document.createElement("button");
+    b.className = "g"; b.dataset.g = g.key; b.style.setProperty("--c", "var(--" + g.key + ")");
+    b.style.left = p.left; b.style.top = p.top;
+    b.innerHTML = '<span class="k">' + g.hotkey + '</span><span class="n"></span>';
+    b.querySelector(".n").textContent = g.label;
+    b.title = g.hint;
+    b.onclick = () => pick(g.key);
+    plane.appendChild(b);
+  });
+  ALL.forEach(g => {
+    const b = document.createElement("button");
+    b.className = "g"; b.dataset.g = g.key; b.style.setProperty("--c", "var(--" + g.key + ")");
+    b.innerHTML = '<span class="k">' + g.hotkey + '</span><span class="n"></span><span class="h"></span>';
+    b.querySelector(".n").textContent = g.label;
+    b.querySelector(".h").textContent = g.hint;
+    b.onclick = () => pick(g.key);
+    list.appendChild(b);
+  });
+  // "không rõ" đứng ngoài mặt phẳng: nó không phải một vị trí cảm xúc.
+  const kr = document.createElement("button");
+  kr.className = "g"; kr.dataset.g = "khong_ro"; kr.style.setProperty("--c", "var(--khong_ro)");
+  kr.style.left = "50%"; kr.style.top = "50%";
+  kr.innerHTML = '<span class="k">6</span><span class="n">Không rõ</span>';
+  kr.title = KHONG_RO.hint;
+  kr.onclick = () => pick("khong_ro");
+  $("plane").appendChild(kr);
+
+  ALL.forEach(g => {
+    const b = document.createElement("button");
+    b.dataset.g2 = g.key; b.style.setProperty("--c", "var(--" + g.key + ")");
+    b.textContent = g.label;
+    b.onclick = () => { const r = rec(cur().id); r.m2 = (r.m2 === g.key) ? "" : g.key; save(); render(); };
+    sub.appendChild(b);
+  });
+
+  const map = $("map");
+  TRACKS.forEach((t, i) => {
+    const c = document.createElement("button");
+    c.className = "cell"; c.textContent = i + 1; c.title = t.id;
+    c.onclick = () => go(i);
+    map.appendChild(c);
+  });
+}
+
+/* ---------- hành động ---------- */
+function pick(k){
+  const r = rec(cur().id);
+  r.m = k; save(); render();
+  if(state.idx < TRACKS.length - 1) setTimeout(() => go(state.idx + 1), 330);
+}
+function go(i){
+  state.idx = Math.max(0, Math.min(TRACKS.length - 1, i));
+  heard = 0; lastT = 0;
+  save(); render(); loadAudio();
+}
+function loadAudio(){
+  const p = $("player");
+  p.pause(); p.src = cur().url; p.load();
+}
+function firstUnlabelled(){
+  for(let i = 0; i < TRACKS.length; i++){
+    const r = state.labels[TRACKS[i].id];
+    if(!r || !r.m) return i;
+  }
+  return -1;
+}
+
+/* ---------- vẽ ---------- */
+function render(){
+  const t = cur(), r = rec(t.id);
+  $("id").textContent = t.id;
+  $("pos").textContent = "bài " + (state.idx + 1) + " / " + TRACKS.length;
+  $("name").textContent = t.name;
+  $("artist").textContent = t.artist;
+  $("spotify").href = t.sp;
+
+  document.querySelectorAll(".g[data-g]").forEach(b =>
+    b.classList.toggle("sel", b.dataset.g === r.m));
+  document.querySelectorAll("[data-g2]").forEach(b =>
+    b.classList.toggle("on", b.dataset.g2 === r.m2));
+  $("hint").textContent = r.m ? byKey[r.m].hint : "Nghe xong rồi bấm một nhóm — hoặc gõ số 1–6.";
+  document.querySelectorAll("#conf button").forEach(b =>
+    b.classList.toggle("on", +b.dataset.c === r.c));
+  document.querySelectorAll("#ok button").forEach(b =>
+    b.classList.toggle("on", +b.dataset.ok === r.ok));
+  $("note").value = r.note || "";
+
+  const n = nDone();
+  $("n").textContent = n;
+  $("fill").style.width = (100 * n / TRACKS.length) + "%";
+  $("left").textContent = n === TRACKS.length ? "xong cả 180" : "còn " + (TRACKS.length - n) + " bài";
+  const d = $("done");
+  d.hidden = n !== TRACKS.length;
+  if(!d.hidden) d.innerHTML = "Xong cả 180 bài. Bấm <b>Lưu file CSV</b> rồi đặt file vào <code>mood-model/annotation/</code>.";
+
+  const cells = $("map").children;
+  for(let i = 0; i < TRACKS.length; i++){
+    const c = cells[i], lr = state.labels[TRACKS[i].id];
+    if(lr && lr.m){ c.dataset.g = lr.m; c.style.setProperty("--c", "var(--" + lr.m + ")"); }
+    else { delete c.dataset.g; c.style.removeProperty("--c"); }
+    c.classList.toggle("now", i === state.idx);
+  }
+  renderHeard();
+}
+function renderHeard(){
+  const el = $("heard"), s = Math.floor(heard);
+  el.firstChild.textContent = "đã nghe " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
+    + (s >= 20 ? "  ✓ đủ 20 giây" : "  (nên nghe ≥ 20 giây)") + " ";
+  el.classList.toggle("enough", s >= 20);
+}
+
+/* ---------- CSV ---------- */
+const q = v => { v = (v == null ? "" : String(v)); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+function toCSV(){
+  const lines = [COLS.join(",")];
+  TRACKS.forEach(t => {
+    const r = state.labels[t.id] || {};
+    lines.push([t.id, t.url, t.sp, t.name, t.artist,
+                r.m || "", r.m2 || "", r.m ? (r.c || 2) : "", r.m ? (r.ok == null ? 1 : r.ok) : "", r.note || ""]
+               .map(q).join(","));
+  });
+  return lines.join("\n") + "\n";
+}
+function parseCSV(text){
+  const rows = []; let row = [], f = "", inQ = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(inQ){
+      if(c === '"'){ if(text[i+1] === '"'){ f += '"'; i++; } else inQ = false; }
+      else f += c;
+    } else if(c === '"') inQ = true;
+    else if(c === ","){ row.push(f); f = ""; }
+    else if(c === "\n"){ row.push(f); rows.push(row); row = []; f = ""; }
+    else if(c !== "\r") f += c;
+  }
+  if(f.length || row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+
+/* ---------- sự kiện ---------- */
+function init(){
+  buildButtons();
+
+  const p = $("player");
+  p.addEventListener("timeupdate", () => {
+    const t = p.currentTime;
+    if(t > lastT && t - lastT < 1.5) heard += t - lastT;   // bỏ qua lúc kéo thanh
+    lastT = t; renderHeard();
+  });
+  p.addEventListener("seeked", () => { lastT = p.currentTime; });
+  p.addEventListener("error", () => {
+    $("hint").textContent = "Link 30 giây không phát được. Mở trên Spotify để nghe, hoặc đặt \"nghe được? → không\".";
+  });
+
+  $("who").addEventListener("change", e => {
+    who = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    e.target.value = who;
+    try{ localStorage.setItem("moodlabel:who", who); }catch(err){}
+    restore(); render(); loadAudio();
+  });
+  $("conf").onclick = e => { const b = e.target.closest("button"); if(!b) return;
+    rec(cur().id).c = +b.dataset.c; save(); render(); };
+  $("ok").onclick = e => { const b = e.target.closest("button"); if(!b) return;
+    rec(cur().id).ok = +b.dataset.ok; save(); render(); };
+  $("note").addEventListener("input", e => { rec(cur().id).note = e.target.value; save(); });
+  $("prev").onclick = () => go(state.idx - 1);
+  $("next").onclick = () => go(state.idx + 1);
+  $("jump").onclick = () => { const i = firstUnlabelled(); if(i >= 0) go(i); };
+
+  $("save").onclick = () => {
+    const blob = new Blob(["﻿" + toCSV()], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "nhan_" + (who || "khong_ten") + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $("show").onclick = () => { $("dlg-ta").value = toCSV(); $("dlg").showModal(); };
+  $("dlg-copy").onclick = async () => {
+    const ta = $("dlg-ta");
+    try{ await navigator.clipboard.writeText(ta.value); $("dlg-copy").textContent = "Đã copy"; }
+    catch(e){ ta.select(); $("dlg-sm").textContent = "Không copy tự động được — bấm Ctrl/Cmd+C."; }
+  };
+  $("load").onclick = () => $("file").click();
+  $("file").onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      const rows = parseCSV(String(fr.result).replace(/^﻿/, ""));
+      const head = rows.shift() || [];
+      const ix = {}; head.forEach((h, i) => ix[h.trim()] = i);
+      if(ix.item_id == null || ix.mood_chinh == null){ alert("File không có cột item_id / mood_chinh."); return; }
+      let n = 0;
+      rows.forEach(r => {
+        const id = (r[ix.item_id] || "").trim(); if(!id) return;
+        const m = (r[ix.mood_chinh] || "").trim().toLowerCase(); if(!m) return;
+        if(!byKey[m]) return;
+        state.labels[id] = {m:m, m2:(r[ix.mood_phu] || "").trim().toLowerCase(),
+                            c:+(r[ix.do_tu_tin] || 2) || 2,
+                            ok:(r[ix.nghe_duoc] || "1").trim() === "0" ? 0 : 1,
+                            note:r[ix.ghi_chu] || ""};
+        n++;
+      });
+      save(); render();
+      $("hint").textContent = "Đã nạp " + n + " nhãn từ file.";
+      e.target.value = "";
+    };
+    fr.readAsText(f);
+  };
+
+  document.addEventListener("keydown", e => {
+    if(e.target.matches("input,textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if(k >= "1" && k <= "6"){
+      const g = ALL[+k - 1];
+      if(e.shiftKey){ const r = rec(cur().id); r.m2 = (r.m2 === g.key) ? "" : g.key; save(); render(); }
+      else pick(g.key);
+      e.preventDefault(); return;
+    }
+    if(k === " "){ p.paused ? p.play().catch(() => {}) : p.pause(); e.preventDefault(); return; }
+    if(k === "r" || k === "R"){ p.currentTime = 0; lastT = 0; p.play().catch(() => {}); e.preventDefault(); return; }
+    if("qwe".includes(k)){ rec(cur().id).c = "qwe".indexOf(k) + 1; save(); render(); e.preventDefault(); return; }
+    if(k === "x" || k === "X"){ const r = rec(cur().id); r.ok = r.ok ? 0 : 1; save(); render(); e.preventDefault(); return; }
+    if(k === "Enter" || k === "ArrowRight"){ go(state.idx + 1); e.preventDefault(); return; }
+    if(k === "ArrowLeft" || k === "Backspace"){ go(state.idx - 1); e.preventDefault(); return; }
+  });
+
+  try{ who = localStorage.getItem("moodlabel:who") || ""; }catch(e){}
+  $("who").value = who;
+  restore();
+  render();
+  loadAudio();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gán nhãn tâm trạng</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Bố cục: một màn hình — thanh tiến độ trên, thẻ bài ở giữa, mặt phẳng valence×energy làm bộ chọn, bản đồ 180 ô dưới cùng. */
+:root{
+  --bg:#f4f4f6; --panel:#ffffff; --panel-2:#ececf1; --line:#d6d6de;
+  --fg:#1b1b22; --fg-dim:#5c5c6b; --fg-faint:#8d8d9c;
+  --accent:#4a46c9; --accent-soft:#e6e5fa;
+  --vui:#b7791f; --buon:#2f5fd0; --thu_gian:#1f7a6c; --nang_dong:#c05621; --cang_thang:#b02a37; --khong_ro:#73738a;
+  --ok:#1f7a4d; --warn:#9a5b00;
+  --font-display:'Space Grotesk','Helvetica Neue',sans-serif;
+  --font-body:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#15151a; --panel:#1e1e26; --panel-2:#272731; --line:#363642;
+  --fg:#ececf2; --fg-dim:#a8a8b8; --fg-faint:#73738a;
+  --accent:#9d99ff; --accent-soft:#2b2a52;
+  --vui:#e0a63c; --buon:#7d9bf2; --thu_gian:#4fc0ac; --nang_dong:#ef8b50; --cang_thang:#f0737f; --khong_ro:#9696ab;
+  --ok:#5bc98c; --warn:#e0a63c;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#15151a; --panel:#1e1e26; --panel-2:#272731; --line:#363642;
+  --fg:#ececf2; --fg-dim:#a8a8b8; --fg-faint:#73738a;
+  --accent:#9d99ff; --accent-soft:#2b2a52;
+  --vui:#e0a63c; --buon:#7d9bf2; --thu_gian:#4fc0ac; --nang_dong:#ef8b50; --cang_thang:#f0737f; --khong_ro:#9696ab;
+  --ok:#5bc98c; --warn:#e0a63c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+button{font:inherit;cursor:pointer;color:inherit}
+input{font:inherit;color:inherit}
+
+/* ---- thanh trên ---- */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-block:12px 10px;margin-bottom:18px}
+.top-row{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+h1{font:700 17px/1.2 var(--font-display);margin:0;letter-spacing:-0.01em;flex:0 0 auto}
+.who{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--fg-dim)}
+.who input{width:110px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.count{font:500 13px/1 var(--font-mono);color:var(--fg-dim);font-variant-numeric:tabular-nums;margin-left:auto}
+.count b{color:var(--fg);font-size:15px}
+.bar{height:5px;background:var(--panel-2);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 12px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:13px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.btn-primary:hover{color:#fff;filter:brightness(1.08)}
+
+/* ---- cảnh báo ---- */
+.rules{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13.5px;color:var(--fg-dim)}
+.rules b{color:var(--fg)}
+.rules ul{margin:8px 0 0;padding-left:20px}
+.rules li{margin:3px 0}
+.rules button{float:right;border:0;background:0;color:var(--fg-faint);font-size:12px;padding:0 0 0 10px}
+
+/* ---- thẻ bài ---- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
+.card-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.chip{font:500 12px/1 var(--font-mono);color:var(--fg-faint);border:1px solid var(--line);border-radius:5px;padding:4px 7px;letter-spacing:.04em}
+.title{font:500 23px/1.25 var(--font-display);margin:6px 0 2px;letter-spacing:-0.01em;text-wrap:balance;min-width:0;overflow-wrap:anywhere}
+.artist{color:var(--fg-dim);font-size:15px;margin:0 0 14px;overflow-wrap:anywhere}
+audio{width:100%;height:38px;display:block}
+.heard{display:flex;align-items:center;gap:10px;margin-top:10px;font:500 12.5px/1 var(--font-mono);color:var(--fg-faint);font-variant-numeric:tabular-nums}
+.heard.enough{color:var(--ok)}
+.heard a{color:var(--fg-faint);margin-left:auto;font-family:var(--font-body);font-size:12.5px}
+
+/* ---- mặt phẳng chọn nhóm ---- */
+.plane-wrap{position:relative;margin:4px 0 14px}
+.axis-e{position:absolute;left:-2px;top:0;bottom:0;width:14px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;font:500 10px/1 var(--font-mono);color:var(--fg-faint);letter-spacing:.06em}
+.axis-e span{writing-mode:vertical-rl;transform:rotate(180deg)}
+.plane{position:relative;height:330px;margin-left:20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.plane::before,.plane::after{content:"";position:absolute;background:var(--line);opacity:.55}
+.plane::before{left:50%;top:0;bottom:0;width:1px}
+.plane::after{top:50%;left:0;right:0;height:1px}
+.axis-v{display:flex;justify-content:space-between;margin:6px 0 0 20px;font:500 10px/1 var(--font-mono);color:var(--fg-faint);letter-spacing:.06em}
+.g{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 11px;min-width:104px;border:1.5px solid var(--line);border-radius:9px;background:var(--panel-2);text-align:left;transition:transform .1s,box-shadow .12s}
+.g:hover{transform:translate(-50%,-50%) scale(1.04);box-shadow:0 3px 14px rgba(0,0,0,.14)}
+.g .k{font:500 10px/1 var(--font-mono);color:var(--fg-faint)}
+.g .n{font:600 14px/1.1 var(--font-body)}
+.g[data-g] .n{color:var(--c)}
+.g.sel{background:var(--c);border-color:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 26%,transparent)}
+.g.sel .n,.g.sel .k{color:#fff}
+.glist{display:none;flex-direction:column;gap:8px;margin-bottom:14px}
+.glist .g{position:static;transform:none;width:100%;min-width:0;flex-direction:row;align-items:center;gap:10px;padding:11px 13px}
+.glist .g:hover{transform:none}
+.glist .g .h{font-size:12.5px;color:var(--fg-dim);margin-left:auto;text-align:right}
+.glist .g.sel .h{color:rgba(255,255,255,.85)}
+.hint{font-size:12.5px;color:var(--fg-dim);margin:0 0 14px;min-height:1.5em}
+
+/* ---- phụ ---- */
+.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+.lab{font:500 11px/1 var(--font-mono);color:var(--fg-faint);letter-spacing:.07em;text-transform:uppercase}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{padding:6px 11px;border:0;background:var(--panel);font-size:13px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.note{flex:1 1 220px;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+.sub{display:flex;gap:6px;flex-wrap:wrap}
+.sub button{padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:12.5px;color:var(--fg-dim)}
+.sub button.on{border-color:var(--c);color:var(--c);font-weight:600;background:var(--accent-soft)}
+
+/* ---- điều hướng ---- */
+.nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 0 22px}
+.keys{margin-left:auto;font:400 11.5px/1.7 var(--font-mono);color:var(--fg-faint);text-align:right}
+kbd{font:500 11px/1 var(--font-mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:2px 4px;background:var(--panel)}
+
+/* ---- bản đồ 180 ô ---- */
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(22px,1fr));gap:4px;margin-top:10px}
+.cell{aspect-ratio:1;border:1px solid var(--line);border-radius:4px;background:var(--panel);font:500 9px/1 var(--font-mono);color:var(--fg-faint);padding:0;display:flex;align-items:center;justify-content:center}
+.cell[data-g]{background:var(--c);border-color:var(--c);color:#fff}
+.cell.now{outline:2px solid var(--fg);outline-offset:1px}
+h2{font:700 13px/1.2 var(--font-display);margin:26px 0 2px;letter-spacing:.02em;text-transform:uppercase;color:var(--fg-dim)}
+.sm{font-size:12.5px;color:var(--fg-faint);margin:4px 0 0}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--fg);max-width:min(640px,92vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{width:100%;height:220px;font:400 12px/1.5 var(--font-mono);border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);padding:10px;resize:vertical}
+.done{background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:14px}
+@media (max-width:620px){
+  .plane-wrap,.axis-v{display:none}
+  .glist{display:flex}
+  .title{font-size:20px}
+  .keys{display:none}
+  .count{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <div class="top-row">
+    <h1>Gán nhãn tâm trạng</h1>
+    <label class="who">tên bạn <input id="who" placeholder="nhu" autocomplete="off" spellcheck="false"></label>
+    <div class="acts">
+      <button class="btn btn-primary" id="save">Lưu file CSV</button>
+      <button class="btn" id="show">Hiện CSV</button>
+      <button class="btn" id="load">Nạp lại CSV cũ</button>
+      <input type="file" id="file" accept=".csv" hidden>
+    </div>
+    <div class="count"><b id="n">0</b> / 180 &nbsp;·&nbsp; <span id="left"></span></div>
+  </div>
+  <div class="bar"><i id="fill"></i></div>
+</div>
+
+<div class="rules" id="rules">
+  <button onclick="document.getElementById('rules').hidden=true">ẩn</button>
+  <b>Ba quy tắc không được phá</b>
+  <ul>
+    <li><b>Nghe trước đã</b> — ít nhất 20 giây. Đừng đoán theo tên bài hay tên nghệ sĩ.</li>
+    <li><b>Không tra cứu, không bàn với hai người kia</b> cho đến khi cả ba gán xong. Trùng nhau vì bàn nhau thì số đồng thuận thành vô nghĩa.</li>
+    <li><b>Đừng mở</b> <code>KEY_KHONG_MO_TRUOC_KHI_GAN.csv</code>.</li>
+  </ul>
+  <div style="margin-top:9px"><b>Bẫy hay gặp:</b> <b>buồn</b> không có nghĩa là nhạc nhẹ. Trong dữ liệu này nhóm buồn có energy trung bình <b>0,589</b>, cao hơn nhóm thư giãn (<b>0,478</b>) — bài gào thét mà sắc thái là mất mát thì vẫn là <b>buồn</b>. Nhóm yên tĩnh là <b>thư giãn</b>.</div>
+</div>
+
+<div class="done" id="done" hidden></div>
+
+<div class="card">
+  <div class="card-head">
+    <span class="chip" id="id">M000</span>
+    <span class="chip" id="pos">bài 1 / 180</span>
+  </div>
+  <h2 class="title" id="name" style="text-transform:none;color:var(--fg);margin-top:6px">—</h2>
+  <p class="artist" id="artist">—</p>
+  <audio id="player" controls preload="none"></audio>
+  <div class="heard" id="heard">đã nghe 0:00 <a id="spotify" href="#" target="_blank" rel="noopener">mở trên Spotify</a></div>
+</div>
+
+<div class="plane-wrap">
+  <div class="axis-e"><span>energy cao</span><span>energy thấp</span></div>
+  <div class="plane" id="plane"></div>
+</div>
+<div class="axis-v"><span>valence thấp →</span><span>← valence cao</span></div>
+<div class="glist" id="glist"></div>
+<p class="hint" id="hint"></p>
+
+<div class="row">
+  <span class="lab">độ tự tin</span>
+  <div class="seg" id="conf">
+    <button data-c="1">1 đoán</button><button data-c="2">2 khá chắc</button><button data-c="3">3 chắc</button>
+  </div>
+  <span class="lab">nghe được?</span>
+  <div class="seg" id="ok">
+    <button data-ok="1">có</button><button data-ok="0">không</button>
+  </div>
+</div>
+<div class="row">
+  <span class="lab">nhóm phụ</span>
+  <div class="sub" id="sub"></div>
+</div>
+<div class="row">
+  <span class="lab">ghi chú</span>
+  <input class="note" id="note" placeholder="chỉ ghi khi thấy cần, ví dụ: hai nửa bài khác hẳn nhau" autocomplete="off">
+</div>
+
+<div class="nav">
+  <button class="btn" id="prev">← Bài trước</button>
+  <button class="btn" id="next">Bài sau →</button>
+  <button class="btn" id="jump">Tới bài chưa gán</button>
+  <div class="keys">
+    <kbd>1</kbd>–<kbd>5</kbd> nhóm · <kbd>6</kbd> không rõ · <kbd>Shift</kbd>+số nhóm phụ<br>
+    <kbd>space</kbd> phát/dừng · <kbd>r</kbd> nghe lại · <kbd>q w e</kbd> độ tự tin · <kbd>x</kbd> không nghe được<br>
+    <kbd>↵</kbd> bài sau · <kbd>←</kbd> <kbd>→</kbd> chuyển bài
+  </div>
+</div>
+
+<h2>Bản đồ 180 bài</h2>
+<p class="sm">Màu = nhóm đã chọn. Bấm vào ô để nhảy tới bài đó.</p>
+<div class="map" id="map"></div>
+
+<h2>Xong thì làm gì</h2>
+<p class="sm">Bấm <b>Lưu file CSV</b>, file tải về tên <code>nhan_&lt;tên&gt;.csv</code>. Đặt nó vào thư mục <code>mood-model/annotation/</code> (ghi đè file trống cùng tên). Khi cả ba người đã có file, chạy <code>python -m src.mood.score_agreement</code>.</p>
+<p class="sm">Nhãn tự lưu trong trình duyệt sau mỗi lần bấm, nhưng đó chỉ là bộ nhớ tạm — xoá dữ liệu trang hoặc dùng cửa sổ ẩn danh là mất. Cứ khoảng 30 bài nên bấm <b>Lưu file CSV</b> một lần cho chắc.</p>
+
+<dialog id="dlg">
+  <h2 style="margin-top:0">CSV</h2>
+  <p class="sm" id="dlg-sm">Chọn hết rồi copy, dán vào file <code>annotation/nhan_&lt;tên&gt;.csv</code>.</p>
+  <textarea id="dlg-ta" readonly></textarea>
+  <div class="acts" style="margin-top:12px">
+    <button class="btn btn-primary" id="dlg-copy">Copy</button>
+    <button class="btn" onclick="document.getElementById('dlg').close()">Đóng</button>
+  </div>
+</dialog>
+
+</div>
+<script>
+"use strict";
+const TRACKS = /*__TRACKS__*/null;
+const GROUPS = /*__GROUPS__*/null;
+const COLS = ["item_id","link_nghe_30s","link_spotify","ten_bai","nghe_si",
+              "mood_chinh","mood_phu","do_tu_tin","nghe_duoc","ghi_chu"];
+const KHONG_RO = {key:"khong_ro", label:"Không rõ", hint:"Nghe xong vẫn không xếp được vào nhóm nào", hotkey:"6"};
+const ALL = GROUPS.concat([KHONG_RO]);
+const byKey = {}; ALL.forEach(g => byKey[g.key] = g);
+
+// Mặt phẳng: trải đúng khoảng centroid thật rồi chừa lề, nên khoảng cách giữa các
+// nút phản ánh khoảng cách thật giữa các nhóm.
+const VRANGE = [0.20, 0.75], ERANGE = [0.40, 0.95];
+const place = (v, e) => ({
+  left: (6 + 88 * (v - VRANGE[0]) / (VRANGE[1] - VRANGE[0])) + "%",
+  top:  (94 - 88 * (e - ERANGE[0]) / (ERANGE[1] - ERANGE[0])) + "%",
+});
+
+let state = {labels:{}, idx:0};
+let who = "";
+let heard = 0, lastT = 0;
+
+const $ = id => document.getElementById(id);
+const key = () => "moodlabel:v1:" + (who || "_");
+
+function save(){ try{ localStorage.setItem(key(), JSON.stringify(state)); }catch(e){} }
+function restore(){
+  try{
+    const raw = localStorage.getItem(key());
+    if(raw){ const d = JSON.parse(raw); state = {labels:d.labels||{}, idx:d.idx||0}; return true; }
+  }catch(e){}
+  state = {labels:{}, idx:0};
+  return false;
+}
+const cur = () => TRACKS[state.idx];
+function rec(id){
+  if(!state.labels[id]) state.labels[id] = {m:"", m2:"", c:2, ok:1, note:""};
+  return state.labels[id];
+}
+const nDone = () => TRACKS.filter(t => state.labels[t.id] && state.labels[t.id].m).length;
+
+/* ---------- dựng các nút ---------- */
+function buildButtons(){
+  const plane = $("plane"), list = $("glist"), sub = $("sub");
+  GROUPS.forEach(g => {
+    const p = place(g.pos[0], g.pos[1]);
+    const b = document.createElement("button");
+    b.className = "g"; b.dataset.g = g.key; b.style.setProperty("--c", "var(--" + g.key + ")");
+    b.style.left = p.left; b.style.top = p.top;
+    b.innerHTML = '<span class="k">' + g.hotkey + '</span><span class="n"></span>';
+    b.querySelector(".n").textContent = g.label;
+    b.title = g.hint;
+    b.onclick = () => pick(g.key);
+    plane.appendChild(b);
+  });
+  ALL.forEach(g => {
+    const b = document.createElement("button");
+    b.className = "g"; b.dataset.g = g.key; b.style.setProperty("--c", "var(--" + g.key + ")");
+    b.innerHTML = '<span class="k">' + g.hotkey + '</span><span class="n"></span><span class="h"></span>';
+    b.querySelector(".n").textContent = g.label;
+    b.querySelector(".h").textContent = g.hint;
+    b.onclick = () => pick(g.key);
+    list.appendChild(b);
+  });
+  // "không rõ" đứng ngoài mặt phẳng: nó không phải một vị trí cảm xúc.
+  const kr = document.createElement("button");
+  kr.className = "g"; kr.dataset.g = "khong_ro"; kr.style.setProperty("--c", "var(--khong_ro)");
+  kr.style.left = "50%"; kr.style.top = "50%";
+  kr.innerHTML = '<span class="k">6</span><span class="n">Không rõ</span>';
+  kr.title = KHONG_RO.hint;
+  kr.onclick = () => pick("khong_ro");
+  $("plane").appendChild(kr);
+
+  ALL.forEach(g => {
+    const b = document.createElement("button");
+    b.dataset.g2 = g.key; b.style.setProperty("--c", "var(--" + g.key + ")");
+    b.textContent = g.label;
+    b.onclick = () => { const r = rec(cur().id); r.m2 = (r.m2 === g.key) ? "" : g.key; save(); render(); };
+    sub.appendChild(b);
+  });
+
+  const map = $("map");
+  TRACKS.forEach((t, i) => {
+    const c = document.createElement("button");
+    c.className = "cell"; c.textContent = i + 1; c.title = t.id;
+    c.onclick = () => go(i);
+    map.appendChild(c);
+  });
+}
+
+/* ---------- hành động ---------- */
+function pick(k){
+  const r = rec(cur().id);
+  r.m = k; save(); render();
+  if(state.idx < TRACKS.length - 1) setTimeout(() => go(state.idx + 1), 330);
+}
+function go(i){
+  state.idx = Math.max(0, Math.min(TRACKS.length - 1, i));
+  heard = 0; lastT = 0;
+  save(); render(); loadAudio();
+}
+function loadAudio(){
+  const p = $("player");
+  p.pause(); p.src = cur().url; p.load();
+}
+function firstUnlabelled(){
+  for(let i = 0; i < TRACKS.length; i++){
+    const r = state.labels[TRACKS[i].id];
+    if(!r || !r.m) return i;
+  }
+  return -1;
+}
+
+/* ---------- vẽ ---------- */
+function render(){
+  const t = cur(), r = rec(t.id);
+  $("id").textContent = t.id;
+  $("pos").textContent = "bài " + (state.idx + 1) + " / " + TRACKS.length;
+  $("name").textContent = t.name;
+  $("artist").textContent = t.artist;
+  $("spotify").href = t.sp;
+
+  document.querySelectorAll(".g[data-g]").forEach(b =>
+    b.classList.toggle("sel", b.dataset.g === r.m));
+  document.querySelectorAll("[data-g2]").forEach(b =>
+    b.classList.toggle("on", b.dataset.g2 === r.m2));
+  $("hint").textContent = r.m ? byKey[r.m].hint : "Nghe xong rồi bấm một nhóm — hoặc gõ số 1–6.";
+  document.querySelectorAll("#conf button").forEach(b =>
+    b.classList.toggle("on", +b.dataset.c === r.c));
+  document.querySelectorAll("#ok button").forEach(b =>
+    b.classList.toggle("on", +b.dataset.ok === r.ok));
+  $("note").value = r.note || "";
+
+  const n = nDone();
+  $("n").textContent = n;
+  $("fill").style.width = (100 * n / TRACKS.length) + "%";
+  $("left").textContent = n === TRACKS.length ? "xong cả 180" : "còn " + (TRACKS.length - n) + " bài";
+  const d = $("done");
+  d.hidden = n !== TRACKS.length;
+  if(!d.hidden) d.innerHTML = "Xong cả 180 bài. Bấm <b>Lưu file CSV</b> rồi đặt file vào <code>mood-model/annotation/</code>.";
+
+  const cells = $("map").children;
+  for(let i = 0; i < TRACKS.length; i++){
+    const c = cells[i], lr = state.labels[TRACKS[i].id];
+    if(lr && lr.m){ c.dataset.g = lr.m; c.style.setProperty("--c", "var(--" + lr.m + ")"); }
+    else { delete c.dataset.g; c.style.removeProperty("--c"); }
+    c.classList.toggle("now", i === state.idx);
+  }
+  renderHeard();
+}
+function renderHeard(){
+  const el = $("heard"), s = Math.floor(heard);
+  el.firstChild.textContent = "đã nghe " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
+    + (s >= 20 ? "  ✓ đủ 20 giây" : "  (nên nghe ≥ 20 giây)") + " ";
+  el.classList.toggle("enough", s >= 20);
+}
+
+/* ---------- CSV ---------- */
+const q = v => { v = (v == null ? "" : String(v)); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+function toCSV(){
+  const lines = [COLS.join(",")];
+  TRACKS.forEach(t => {
+    const r = state.labels[t.id] || {};
+    lines.push([t.id, t.url, t.sp, t.name, t.artist,
+                r.m || "", r.m2 || "", r.m ? (r.c || 2) : "", r.m ? (r.ok == null ? 1 : r.ok) : "", r.note || ""]
+               .map(q).join(","));
+  });
+  return lines.join("\n") + "\n";
+}
+function parseCSV(text){
+  const rows = []; let row = [], f = "", inQ = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(inQ){
+      if(c === '"'){ if(text[i+1] === '"'){ f += '"'; i++; } else inQ = false; }
+      else f += c;
+    } else if(c === '"') inQ = true;
+    else if(c === ","){ row.push(f); f = ""; }
+    else if(c === "\n"){ row.push(f); rows.push(row); row = []; f = ""; }
+    else if(c !== "\r") f += c;
+  }
+  if(f.length || row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+
+/* ---------- sự kiện ---------- */
+function init(){
+  buildButtons();
+
+  const p = $("player");
+  p.addEventListener("timeupdate", () => {
+    const t = p.currentTime;
+    if(t > lastT && t - lastT < 1.5) heard += t - lastT;   // bỏ qua lúc kéo thanh
+    lastT = t; renderHeard();
+  });
+  p.addEventListener("seeked", () => { lastT = p.currentTime; });
+  p.addEventListener("error", () => {
+    $("hint").textContent = "Link 30 giây không phát được. Mở trên Spotify để nghe, hoặc đặt \"nghe được? → không\".";
+  });
+
+  $("who").addEventListener("change", e => {
+    who = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    e.target.value = who;
+    try{ localStorage.setItem("moodlabel:who", who); }catch(err){}
+    restore(); render(); loadAudio();
+  });
+  $("conf").onclick = e => { const b = e.target.closest("button"); if(!b) return;
+    rec(cur().id).c = +b.dataset.c; save(); render(); };
+  $("ok").onclick = e => { const b = e.target.closest("button"); if(!b) return;
+    rec(cur().id).ok = +b.dataset.ok; save(); render(); };
+  $("note").addEventListener("input", e => { rec(cur().id).note = e.target.value; save(); });
+  $("prev").onclick = () => go(state.idx - 1);
+  $("next").onclick = () => go(state.idx + 1);
+  $("jump").onclick = () => { const i = firstUnlabelled(); if(i >= 0) go(i); };
+
+  $("save").onclick = () => {
+    const blob = new Blob(["﻿" + toCSV()], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "nhan_" + (who || "khong_ten") + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $("show").onclick = () => { $("dlg-ta").value = toCSV(); $("dlg").showModal(); };
+  $("dlg-copy").onclick = async () => {
+    const ta = $("dlg-ta");
+    try{ await navigator.clipboard.writeText(ta.value); $("dlg-copy").textContent = "Đã copy"; }
+    catch(e){ ta.select(); $("dlg-sm").textContent = "Không copy tự động được — bấm Ctrl/Cmd+C."; }
+  };
+  $("load").onclick = () => $("file").click();
+  $("file").onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      const rows = parseCSV(String(fr.result).replace(/^﻿/, ""));
+      const head = rows.shift() || [];
+      const ix = {}; head.forEach((h, i) => ix[h.trim()] = i);
+      if(ix.item_id == null || ix.mood_chinh == null){ alert("File không có cột item_id / mood_chinh."); return; }
+      let n = 0;
+      rows.forEach(r => {
+        const id = (r[ix.item_id] || "").trim(); if(!id) return;
+        const m = (r[ix.mood_chinh] || "").trim().toLowerCase(); if(!m) return;
+        if(!byKey[m]) return;
+        state.labels[id] = {m:m, m2:(r[ix.mood_phu] || "").trim().toLowerCase(),
+                            c:+(r[ix.do_tu_tin] || 2) || 2,
+                            ok:(r[ix.nghe_duoc] || "1").trim() === "0" ? 0 : 1,
+                            note:r[ix.ghi_chu] || ""};
+        n++;
+      });
+      save(); render();
+      $("hint").textContent = "Đã nạp " + n + " nhãn từ file.";
+      e.target.value = "";
+    };
+    fr.readAsText(f);
+  };
+
+  document.addEventListener("keydown", e => {
+    if(e.target.matches("input,textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if(k >= "1" && k <= "6"){
+      const g = ALL[+k - 1];
+      if(e.shiftKey){ const r = rec(cur().id); r.m2 = (r.m2 === g.key) ? "" : g.key; save(); render(); }
+      else pick(g.key);
+      e.preventDefault(); return;
+    }
+    if(k === " "){ p.paused ? p.play().catch(() => {}) : p.pause(); e.preventDefault(); return; }
+    if(k === "r" || k === "R"){ p.currentTime = 0; lastT = 0; p.play().catch(() => {}); e.preventDefault(); return; }
+    if("qwe".includes(k)){ rec(cur().id).c = "qwe".indexOf(k) + 1; save(); render(); e.preventDefault(); return; }
+    if(k === "x" || k === "X"){ const r = rec(cur().id); r.ok = r.ok ? 0 : 1; save(); render(); e.preventDefault(); return; }
+    if(k === "Enter" || k === "ArrowRight"){ go(state.idx + 1); e.preventDefault(); return; }
+    if(k === "ArrowLeft" || k === "Backspace"){ go(state.idx - 1); e.preventDefault(); return; }
+  });
+
+  try{ who = localStorage.getItem("moodlabel:who") || ""; }catch(e){}
+  $("who").value = who;
+  restore();
+  render();
+  loadAudio();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+hệ A,hệ B,đầu vào,n,khớp_%,cohen_kappa,tang
+L1 LLM tên bài,L1 LLM tên + tag,tên ↔ tên + tag,172,68.02325581395348,0.5939739903000129,tất cả
+T2 bảng tag,L1 LLM tên + tag,tag ↔ tên + tag,59,62.71186440677966,0.5335968379446641,tất cả
+T2 bảng tag,L1 LLM tên bài,tag ↔ tên,59,59.32203389830508,0.49156193895870737,tất cả
+T4 mô hình thật đoán,L1 LLM tên bài,âm thanh ↔ tên,120,32.5,0.15625,tất cả
+T4 mô hình thật đoán,L1 LLM tên + tag,âm thanh ↔ tên + tag,114,31.57894736842105,0.14565718677940045,tất cả
+T2 bảng tag,T4 mô hình thật đoán,tag ↔ âm thanh,0,,,tất cả
+L1 LLM tên bài,L1 LLM tên + tag,tên ↔ tên + tag,60,63.33333333333333,0.5307500888730892,conflict
+T4 mô hình thật đoán,L1 LLM tên + tag,âm thanh ↔ tên + tag,60,38.333333333333336,0.22916666666666669,conflict
+T4 mô hình thật đoán,L1 LLM tên bài,âm thanh ↔ tên,60,36.666666666666664,0.2083333333333333,conflict
+T2 bảng tag,T4 mô hình thật đoán,tag ↔ âm thanh,0,,,conflict
+T2 bảng tag,L1 LLM tên bài,tag ↔ tên,0,,,conflict
+T2 bảng tag,L1 LLM tên + tag,tag ↔ tên + tag,0,,,conflict
+L1 LLM tên bài,L1 LLM tên + tag,tên ↔ tên + tag,58,70.6896551724138,0.6286252354048963,labeled
+T2 bảng tag,L1 LLM tên + tag,tag ↔ tên + tag,59,62.71186440677966,0.5335968379446641,labeled
+T2 bảng tag,L1 LLM tên bài,tag ↔ tên,59,59.32203389830508,0.49156193895870737,labeled
+T2 bảng tag,T4 mô hình thật đoán,tag ↔ âm thanh,0,,,labeled
+T4 mô hình thật đoán,L1 LLM tên bài,âm thanh ↔ tên,0,,,labeled
+T4 mô hình thật đoán,L1 LLM tên + tag,âm thanh ↔ tên + tag,0,,,labeled
+L1 LLM tên bài,L1 LLM tên + tag,tên ↔ tên + tag,54,70.37037037037037,0.61307657859382,no_emotion_tag
+T4 mô hình thật đoán,L1 LLM tên bài,âm thanh ↔ tên,60,28.333333333333332,0.10416666666666664,no_emotion_tag
+T4 mô hình thật đoán,L1 LLM tên + tag,âm thanh ↔ tên + tag,54,24.074074074074073,0.04937741519965651,no_emotion_tag
+T2 bảng tag,T4 mô hình thật đoán,tag ↔ âm thanh,0,,,no_emotion_tag
+T2 bảng tag,L1 LLM tên bài,tag ↔ tên,0,,,no_emotion_tag
+T2 bảng tag,L1 LLM tên + tag,tag ↔ tên + tag,0,,,no_emotion_tag

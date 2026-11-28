@@ -4,6 +4,12 @@ data/*
 data/processed/*
 !data/processed/*_summary_*.csv
 !data/processed/cohort_*.csv
+# Nhãn LLM trên đúng 180 bài của tập nhãn người: 5 KB/file, là artifact cho RESULTS.md mục 28.4
+!data/processed/llm_labels_*_gold.csv
+# Bảng tổng hợp L1 và đối chiếu hệ nhãn: artifact cho RESULTS.md mục 28.8 và 29
+!data/processed/llm_compare.csv
+!data/processed/llm_by_popularity.csv
+!data/processed/label_systems_compare.csv
 models/
 __pycache__/
 *.pyc

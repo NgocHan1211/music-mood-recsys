@@ -1461,3 +1461,295 @@ python -m src.mood.evaluate_four_sets --split official --n-per-set 3 --n-users 6
 
 Mặc định của `taste.py` và `evaluate_four_sets.py` **không đổi** (`log`/15 vòng, hậu tố rỗng), nên
 mọi số Phần I–III vẫn tái lập đúng và không file nào bị ghi đè.
+
+---
+
+## 28. Phần V — Bộ nhãn tâm trạng do người nghe gán (đang chạy)
+
+Đây là ưu tiên phương pháp số 1 mà nhóm tự ghi trong báo cáo 09/11: *"Ưu tiên đầu là tạo một tập
+nhãn độc lập."* Lý do: **mọi** nhãn tâm trạng hiện có là nhãn yếu suy từ tag Last.fm theo bảng
+trọng số nhóm tự đặt, nên T2, A1 và L1 đều đang được chấm bằng chính hệ nhãn sinh ra chúng.
+
+### 28.1 Thiết kế mẫu — 180 bài, phân tầng
+
+`src/mood/build_label_set.py`. Phân tầng `label_status` × `mood_pred` = 3 × 5 = **15 ô, mỗi ô 12
+bài**, lấy trong kho 22.133 bài của catalogue chính thức có link nghe. Thứ tự hàng đã trộn.
+
+| | buon | cang_thang | nang_dong | thu_gian | vui |
+|---|---|---|---|---|---|
+| `labeled` | 12 | 12 | 12 | 12 | 12 |
+| `conflict` | 12 | 12 | 12 | 12 | 12 |
+| `no_emotion_tag` | 12 | 12 | 12 | 12 | 12 |
+
+Ba tầng trả lời ba câu khác nhau: nhãn tag có khớp người nghe không · bỏ `conflict` là đúng hay oan
+· chỗ chỉ có mô hình đoán thì sai cỡ nào. Khối lượng: ~90 phút audio, ~2–2,5 giờ/người.
+
+**Nghe bằng gì:** cột `spotify_preview_url` của `Music Info.csv` còn phục vụ audio thật — kiểm bằng
+range request: HTTP 206, `audio/mpeg`, magic `ID3`, phủ **100%** cả 50.683 bài (thử lại 10/180 ngày
+28/11: 10/10 còn sống). Nên bộ nhãn này là **nhãn dựa trên nghe**, không phải suy từ metadata.
+
+### 28.2 Công cụ gán nhãn
+
+`src/mood/make_label_tool.py` → `annotation/gan_nhan.html`, một file HTML tĩnh (69 KB), mở bằng
+trình duyệt, không cần cài đặt hay tài khoản. Nhúng trình phát 30 giây; 5 nút nhóm đặt **đúng toạ
+độ centroid đã học** trên mặt phẳng valence × energy:
+
+| nhóm | valence | energy | vị trí nút (top) |
+|---|---|---|---|
+| cang_thang | 0,295 | 0,876 | 17,9% |
+| nang_dong | 0,490 | 0,795 | 30,7% |
+| vui | 0,653 | 0,643 | 55,2% |
+| **buon** | 0,310 | **0,589** | **63,7%** |
+| **thu_gian** | 0,402 | **0,478** | **81,6%** |
+
+Hai dòng cuối là lý do bố cục này đáng làm: **nhóm buồn có energy cao hơn nhóm thư giãn**, nên bẫy
+"buồn = nhạc nhẹ" được hình học của chính trang phủ định. Trang không chứa `mood_label`,
+`mood_pred`, `label_status` hay `tags` (kiểm: 0 lần xuất hiện) — giữ nguyên tính mù.
+
+### 28.3 Chấm đồng thuận
+
+`src/mood/score_agreement.py`: Fleiss' kappa, Cohen's kappa từng cặp, nhãn chốt đa số phiếu (≥2
+phiếu, hoà → `tranh_chap`), và tỷ lệ khớp với nhãn tag T2 / dự đoán T4 / nhãn LLM, **tách theo từng
+tầng**. Kiểm đầu-cuối bằng 3 bộ nhãn giả: κ = 0,5805, chốt 167/180, 13 tranh chấp; CSV do
+`gan_nhan.html` xuất ra được script đọc đúng (round-trip 10 cột, chịu được tên bài có dấu phẩy và
+dấu ngoặc kép).
+
+### 28.4 Chạy L1 trên đúng 180 bài này (`--stage gold`)
+
+Dòng "so với LLM" lẽ ra chỉ có **n ≈ 4**, vì L1 cũ chạy trên 1.000 + 1.597 bài khác. Thêm nhánh
+`--stage gold --tracks-file` vào `labeling_llm.py` để chạy trên đúng danh sách bài:
+
+| biến thể | bài | LLM dám chọn nhóm | `khong_ro` |
+|---|---|---|---|
+| `llm_ten` (tên + nghệ sĩ) | 180 | 179 (**99,4%**) | 1 |
+| `llm_ten_tag` (thêm tag) | 180 | 173 (**96,1%**) | 7 |
+
+**Hai biến thể chỉ trùng nhau 117/180 bài (65,0%)** — cho LLM xem tag làm nó đổi ý ở **63 bài
+(35,0%)**. Con số này tính cả `khong_ro` là một dạng lệch; nếu chỉ xét 172 bài mà cả hai biến thể
+đều chọn một nhóm thật thì khớp 68,0%, lật **32,0%** (mục 29.4 so với mẫu 1.500 bài).
+
+Con số này độc lập với nhãn người và đo được ngay: tag không phải thông tin phụ trợ nhẹ mà là thứ
+lật khoảng một phần ba quyết định. Bộ nhãn người sẽ cho biết **lật theo chiều đúng hay sai**.
+
+Backend `openai_compat` / `openai/gpt-oss-120b` (Groq), 10 lượt gọi, ~18 nghìn token, trong hạn mức
+miễn phí. Nhãn **không in ra terminal** và chỉ đối chiếu sau khi cả ba người gán xong.
+
+### 28.5 File
+
+```
+annotation/mood_gold_blind.csv                 180 bài, chỉ link + tên (bản mù)
+annotation/nhan_{nhu,han,thy}.csv              bản trống cho từng người
+annotation/gan_nhan.html                       công cụ gán nhãn
+annotation/KEY_KHONG_MO_TRUOC_KHI_GAN.csv      đáp án máy — mở sau khi gán xong
+docs/huong_dan_gan_nhan_mood.md                hướng dẫn 7 mục
+data/processed/llm_labels_openai_compat_gpt-oss-120b_llm_ten{,_tag}_gold.csv
+```
+
+```bash
+python -m src.mood.build_label_set --n-per-cell 12 --labellers nhu,han,thy
+python -m src.mood.make_label_tool
+python -m src.mood.labeling_llm --backend openai_compat --stage gold
+python -m src.mood.score_agreement          # sau khi đủ ba file nhãn
+```
+
+### 28.6 Chưa có gì để kết luận
+
+Mục này **chưa có kết quả**: chưa ai gán nhãn. Ba điều đã biết trước và nên ghi vào báo cáo:
+
+1. **Dòng nhãn tag T2 sẽ có n ≈ 40–60**, không phải 180 — hai tầng kia chính là chỗ tag bó tay.
+   Đúng thiết kế, không phải lỗi.
+2. **`do_tu_tin` mặc định là `2`** trong công cụ, nên cột đó lệch về 2 ở bài nào người gán không
+   chủ động sửa. Chỉ dùng để lọc các bài đánh dấu `1` (đoán), **không dùng như thang đo định lượng**.
+3. **Kappa thấp không phải thất bại.** Nếu ba người chỉ đồng thuận κ ≈ 0,45 thì đó là **giới hạn
+   trên** của bài toán và không mô hình nào nên được kỳ vọng vượt mức đó — một phát hiện đáng viết.
+
+### 28.7 Đặc trưng nào thật sự tách `vui` khỏi `nang_dong` trong nhãn T2
+
+Đo trên 6.434 bài tầng `labeled` (2.434 `vui` + 4.000 `nang_dong`), **đã loại 180 bài của tập nhãn
+người**. Cột cuối là hiệu trung bình chia độ lệch chuẩn gộp (Cohen's d).
+
+| đặc trưng | vui | nang_dong | d |
+|---|---|---|---|
+| **instrumentalness** | 0,055 | 0,337 | **+0,96** |
+| energy | 0,633 | 0,789 | +0,89 |
+| acousticness | 0,224 | 0,067 | −0,82 |
+| valence | 0,669 | 0,522 | −0,60 |
+| tempo | 118,0 | 131,4 | +0,50 |
+| loudness | −8,34 | −7,09 | +0,38 |
+| **danceability** | **0,662** | **0,625** | **−0,24** |
+| mode | 0,608 | 0,565 | −0,09 |
+
+Ba điều, theo mức quan trọng tăng dần:
+
+1. **`danceability` không tách được gì**, và còn lệch *ngược* chiều trực giác: `vui` nhảy được hơn
+   `nang_dong`. Tiêu chí "muốn nhảy / thúc giục cơ thể" trong guideline bản đầu vì vậy là **sai** —
+   đã sửa 28/11 thành thủ tục hai câu hỏi dựa trên *tích cực* rồi *cường độ*.
+2. **`nang_dong` không phải nhóm tích cực.** 46% bài `nang_dong` có valence < 0,5 (so với 23% của
+   `vui`), và trong khoảng valence 0,7–1,0 tag chia gần đúng 50–50 giữa hai nhóm. Sơ đồ bốn góc ở
+   bản đầu đặt `nang_dong` vào góc "tích cực, sôi" là **mô tả sai** chính dữ liệu của nhóm.
+3. **Đặc trưng tách mạnh nhất lại là `instrumentalness` (d = +0,96), không phải valence hay
+   energy.** `nang_dong` của T2 có instrumentalness 0,337 so với 0,055 của `vui` — gấp 6 lần — và
+   acousticness thấp hơn nhiều. Nghĩa là nhãn `nang_dong` suy từ tag **có thể đang bắt thể loại
+   (electronic/instrumental) chứ không bắt tâm trạng**. Nếu đúng thì đây là một lỗi hệ thống của
+   bảng trọng số tag, không phải nhiễu.
+
+**Điểm 3 là giả thuyết, chưa phải kết luận**, vì nó đo trên chính nhãn T2 nên không tự kiểm được.
+Bộ nhãn người là phép kiểm: nếu người nghe xếp nhạc electronic có giọng hát vui vào `vui` trong khi
+T2 xếp vào `nang_dong`, thì giả thuyết đứng. **Phải kiểm bằng cách tách theo `instrumentalness` khi
+chấm `score_agreement`** — chưa làm được trước khi có nhãn người.
+
+> ⚠️ **Rủi ro nhiễm chéo đã biết.** Ba số liệu trên được đo *trước khi* TV3 gán nhãn, và TV3 đã đọc
+> chúng. Guideline **không** chứa thông tin về `instrumentalness` nên TV2 và TV3-khác (Thy) vẫn
+> gán nhãn mù với trục này. Khi phân tích phải đối chiếu: nếu riêng nhãn của `nhu` khớp T2 trên các
+> bài instrumental cao nhiều hơn hẳn nhãn của `han`/`thy`, thì đó là dấu hiệu nhiễm và phải ghi vào
+> hạn chế.
+
+### 28.8 Thay tạm nhãn người bằng đối chiếu hệ nhãn — và tại sao nó *không* thay được
+
+Nhóm không kịp gán nhãn trước buổi báo cáo, nên mục này dùng nhãn LLM thay chỗ. Phải nói trước:
+**nó không thay được, và dưới đây là số chứng minh điều đó.** Những gì chạy được vẫn là kết quả
+thật và báo cáo được, chỉ là trả lời câu hỏi yếu hơn.
+
+`src/mood/compare_label_systems.py`, chạy trên 180 bài của tập nhãn. Bốn hệ, kèm nguồn thông tin:
+
+| hệ | nguồn thông tin | phủ được |
+|---|---|---|
+| T2 bảng tag | tag | 60/180 (33,3%) |
+| T4 mô hình thật đoán | âm thanh | 120/180 (66,7%) |
+| L1 LLM tên bài | tên bài + nghệ sĩ | 179/180 (99,4%) |
+| L1 LLM tên + tag | tên + tag | 173/180 (96,1%) |
+
+#### Bẫy phải tránh: `mood_pred` **không** phải dự đoán mô hình ở mọi bài
+
+`mood_source` trong `track_mood.parquet` ghi `tag` ở **26.752** bài và `model` ở phần còn lại. Ở bài
+`mood_source == "tag"`, cột `mood_pred` **là bản sao của `mood_label`**: so hai cột trên toàn dữ
+liệu ra **99,88%**. Lần chạy đầu của bảng trên vì vậy hiện "T2 ↔ T4 khớp 100,0%, kappa 1,000" như
+thể hai hệ độc lập cùng kết luận. Đã sửa: dòng T4 chỉ tính ở bài `mood_source == "model"`.
+`score_agreement.py` mắc đúng lỗi này và cũng đã sửa — **nếu không, bảng nhãn người sau này sẽ
+nhân đôi dòng T2 và không ai nhận ra.**
+
+#### Khớp nhau từng cặp (180 bài)
+
+| hệ A | hệ B | đầu vào | n | khớp | Cohen's κ |
+|---|---|---|---|---|---|
+| L1 tên bài | L1 tên + tag | tên ↔ tên + tag | 172 | 68,0% | 0,594 |
+| T2 bảng tag | L1 tên + tag | tag ↔ tên + tag | 59 | 62,7% | 0,534 |
+| T2 bảng tag | L1 tên bài | tag ↔ tên | 59 | **59,3%** | **0,492** |
+| T4 mô hình | L1 tên bài | âm thanh ↔ tên | 120 | **32,5%** | **0,156** |
+| T4 mô hình | L1 tên + tag | âm thanh ↔ tên + tag | 114 | 31,6% | 0,146 |
+
+Tách theo tầng, chỗ quan trọng nhất là tầng `no_emotion_tag` — đúng chỗ tag bó tay và cần nhãn nhất:
+
+| tầng | T4 ↔ L1 tên | κ |
+|---|---|---|
+| `labeled` | 59,3% | 0,492 |
+| `conflict` | 36,7% | 0,208 |
+| **`no_emotion_tag`** | **28,3%** | **0,104** |
+
+#### Không thể tam giác hoá — đây là phát hiện, không phải thiếu dữ liệu
+
+Số bài có **cả** T2 và T4-mô-hình: **0**. Hai cột loại trừ nhau theo thiết kế (T2 chỉ tồn tại ở bài
+có tag cảm xúc; T4-mô-hình chỉ tồn tại ở bài không có). Nên ý tưởng "ba nguồn thông tin rời nhau
+cùng xác nhận một nhãn" là **bất khả thi về mặt cấu trúc**. Chỉ còn hai phép so, trên hai tập bài
+rời nhau:
+
+- bài **có** tag cảm xúc: T2 ↔ L1 = 59,3%, κ = 0,492 (n = 59)
+- bài **tag bó tay**: T4 ↔ L1 = 32,5%, κ = 0,156 (n = 120)
+
+Kết luận: **không có cách nào xác nhận nhãn bằng chính các hệ tự động này**, và chỗ cần nhãn nhất
+lại là chỗ hai hệ còn lại gần như không đồng ý gì (κ = 0,10). Đó chính là lập luận mạnh nhất cho
+việc phải có nhãn người — mục 28 giữ nguyên là việc còn phải làm, không bị mục này thay thế.
+
+---
+
+## 29. L1 — gán nhãn bằng LLM: **kết quả âm**, không dùng cho hệ thống
+
+Backend `openai_compat` / `openai/gpt-oss-120b` (Groq), `temperature = 0`. Hai biến thể khác nhau
+đúng một điều: có cho LLM xem cột `tags` hay không.
+
+### 29.1 Nhánh hiệu chuẩn — 1.500 bài **đã có** nhãn tag (mẫu `rng(seed=42)`)
+
+Mốc so sánh trước đã: nhãn T2 trên mẫu này lệch nặng — `cang_thang` 42,7%, `thu_gian` 30,5%,
+`nang_dong` 13,7%, `vui` 6,9%, `buon` 6,3%. Nên **cứ đoán `cang_thang` cho mọi bài là đúng 42,7%**.
+
+| cách gán | trùng nhãn tay T2 | hơn mức đoán bừa | khớp vị trí âm thanh | `khong_ro` |
+|---|---|---|---|---|
+| bảng tay T2 | 100% (định nghĩa) | — | **50,7%** | 0% |
+| `llm_ten` (tên + nghệ sĩ) | 51,4% | **+8,7 điểm** | **38,3%** | 5,6% |
+| `llm_ten_tag` (+ tag) | 72,6% | +29,8 điểm | 44,8% | 3,1% |
+
+Hai cách đọc bắt buộc:
+
+1. **`llm_ten` chỉ hơn mức đoán bừa 8,7 điểm.** Đọc tên bài gần như không cho thêm thông tin tâm
+   trạng trên bộ này.
+2. **72,6% của `llm_ten_tag` không phải bằng chứng chất lượng.** Nhãn T2 *sinh ra từ tag*, nên cho
+   LLM xem tag là cho nó dò lại chính bảng trọng số. Hai hệ dùng chung đầu vào thì khớp là đương
+   nhiên. Bằng chứng: đo bằng tiêu chí **không** dùng tag — vị trí trong không gian valence×energy —
+   thì cả hai biến thể LLM đều **kém hơn** bảng tay (38,3% và 44,8% so với 50,7%).
+
+### 29.2 Nhánh mở rộng — 1.600 bài **tag bó tay**
+
+| nhãn dùng để huấn luyện T3 | số bài có nhãn | macro-F1 | accuracy |
+|---|---|---|---|
+| chỉ bảng tay T2 | 12.245 | **0,5656** | 0,7069 |
+| tay + `llm_ten` | 13.842 (**+1.597**) | **0,5236** | 0,6430 |
+
+**Thêm nhãn LLM làm bộ phân loại tụt 0,042 macro-F1 (−7,4% tương đối).** Độ phủ tăng 13%, chất
+lượng giảm đủ để đổi lại là lỗ. Nhãn LLM ở nhánh này chỉ khớp vị trí âm thanh **30,5%**.
+
+### 29.3 Tách theo độ phổ biến — lo ngại rò rỉ trí nhớ **không** thành hiện thực
+
+Docstring của module đặt ra đúng lo ngại này: LLM biết sẵn bài nổi tiếng nên chỉ kết quả ở nhóm bài
+ít người nghe mới khái quát được. Số thực tế đi **ngược** dự đoán:
+
+| nhóm phổ biến | `llm_ten` trùng T2 | `llm_ten_tag` trùng T2 | n |
+|---|---|---|---|
+| ít nghe nhất (25%) | **57,0%** | **81,8%** | 387 |
+| 25–50% | 53,2% | 69,9% | 363 |
+| 50–75% | 44,7% | 65,1% | 375 |
+| nổi nhất (25%) | 50,6% | 73,1% | 375 |
+
+Nhóm **ít nghe nhất lại khớp cao nhất**, ở cả hai biến thể. Nên 51,4% ở mục 29.1 **không** do LLM
+nhớ bài nổi tiếng. Giả thuyết (chưa kiểm): bài ít nghe trong bộ này nghiêng về thể loại khuôn mẫu
+(metal, ambient) có tên bài báo hiệu tâm trạng rõ hơn nhạc pop nổi tiếng. Không dùng giả thuyết này
+làm kết luận.
+
+### 29.4 Kết luận và cách viết vào báo cáo
+
+**L1 không dùng được cho hệ thống.** Viết đúng như vậy, đừng che: một hướng đã thử, đo tử tế bằng
+hai nhánh và một phép kiểm độ phổ biến, và nó thất bại. Giá trị của nó là:
+
+1. **Phủ định một giải pháp hiển nhiên.** "Hạn chế lớn nhất là 43,8% catalogue không có nhãn tag →
+   nhờ LLM đọc tên bài gán bù" là hướng ai cũng nghĩ ra; giờ có số cho thấy nó làm hỏng bộ phân
+   loại, không phải chỉ phỏng đoán.
+2. **Chỉ ra bảng tay T2 mạnh hơn tưởng.** Theo tiêu chí âm thanh độc lập, T2 (50,7%) hơn cả hai
+   biến thể LLM. Bảng trọng số tag tự đặt không phải mắt xích yếu nhất.
+3. **Đo được ảnh hưởng của tag lên LLM.** Hai biến thể khác nhau đúng một điều (có cho xem tag hay
+   không), cùng mô hình, cùng prompt, `temperature = 0` — nên mọi chênh lệch đều do tag. Tính trên
+   các bài **cả hai biến thể đều chọn một nhóm thật**:
+
+   | tập bài | n | khớp nhau | tag lật quyết định |
+   |---|---|---|---|
+   | 1.500 bài hiệu chuẩn | 1.371 | 62,1% | **37,9%** |
+   | 180 bài tập nhãn | 172 | 68,0% | **32,0%** |
+
+   Nếu tính cả `khong_ro` là một dạng lệch thì lần lượt là 43,2% và 35,0%. Dù đếm cách nào, tag
+   cũng lật khoảng **một phần ba** quyết định — nó không phải thông tin phụ trợ nhẹ.
+
+### 29.5 File
+
+```
+data/processed/llm_labels_openai_compat_gpt-oss-120b_llm_ten_calib.csv       1.500 bài
+data/processed/llm_labels_openai_compat_gpt-oss-120b_llm_ten_tag_calib.csv   1.500 bài
+data/processed/llm_labels_openai_compat_gpt-oss-120b_llm_ten_expand.csv      1.600 bài
+data/processed/llm_labels_openai_compat_gpt-oss-120b_llm_ten{,_tag}_gold.csv   180 bài
+data/processed/llm_compare.csv · llm_by_popularity.csv · label_systems_compare.csv
+```
+
+```bash
+python -m src.mood.labeling_llm --backend openai_compat --stage calib --n-calib 1500
+python -m src.mood.labeling_llm --backend openai_compat --stage eval  --n-calib 1500
+python -m src.mood.compare_label_systems
+```
+
+`track_mood_labels.parquet` **không** bị ghi đè ở bất kỳ bước nào.
